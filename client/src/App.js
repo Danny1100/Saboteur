@@ -1,6 +1,7 @@
 import './App.css';
 import io from 'socket.io-client';
 import { useState, useEffect } from 'react';
+import Homepage from './Homepage';
 
 let socket;
 
@@ -47,25 +48,11 @@ function App() {
 
   return (
     <div className="App">
-      <input 
-      type="text" 
-      placeholder="Username" 
-      onChange={(event) => {
-        setUsername(event.target.value);
-      }}/>
-      <br></br>
-      <input 
-      type="text" 
-      placeholder="Password" 
-      onChange={(event) => {
-        setPassword(event.target.value);
-      }}/>
-      <br></br>
-      <button onClick={joinRoom}>Join Room</button>
-      <h3>Players:</h3>
-      <div>{users.map((user) => {return <p>{user.username}</p>})}</div>
-      <br></br>
-      <button>Start Game</button>
+      <Homepage 
+      setUsername={setUsername}
+      setPassword={setPassword}
+      users={users}
+      joinRoom={joinRoom}/>
     </div>
   );
 }
