@@ -63,7 +63,7 @@ function App() {
       <br></br>
       <button onClick={joinRoom}>Join Room</button>
       <h3>Players:</h3>
-      <div>{JSON.stringify(users)}</div>
+      <div>{users.map((user) => {return <p>{user.username}</p>})}</div>
       <br></br>
       <button>Start Game</button>
     </div>
