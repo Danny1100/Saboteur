@@ -7,7 +7,7 @@ let socket;
 function App() {
   //initialise socket state
   const [username, setUsername] = useState('');
-  const [roomId, setRoomId] = useState('');
+  const [password, setPassword] = useState('');
   const [users, setUsers] = useState([]);
   //might need current user, room state (i.e. display homepage/lobby/game), roomFull?                            ?????????????????????
 
@@ -37,33 +37,35 @@ function App() {
 
   //Function to join a room
   const joinRoom = () => {
-    if(username !== "" && roomId !== "") {
-      socket.emit("joinRoom", {username: username, roomId: roomId});
+    if(username !== "" && password !== "") {
+      socket.emit("joinRoom", {username: username, password: password});
     } else {
-      alert("Enter a valid Username/Room ID");
+      alert("Enter a valid Username and Password");
     };
   };
 
 
   return (
     <div className="App">
-      <button>Create Room</button>
-      <br></br>  
       <input 
       type="text" 
       placeholder="Username" 
       onChange={(event) => {
         setUsername(event.target.value);
       }}/>
-
+      <br></br>
       <input 
       type="text" 
-      placeholder="Room ID" 
+      placeholder="Password" 
       onChange={(event) => {
-        setRoomId(event.target.value);
+        setPassword(event.target.value);
       }}/>
+      <br></br>
       <button onClick={joinRoom}>Join Room</button>
+      <h3>Players:</h3>
       <div>{JSON.stringify(users)}</div>
+      <br></br>
+      <button>Start Game</button>
     </div>
   );
 }

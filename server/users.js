@@ -1,7 +1,10 @@
 const users = [];
 const numberOfPlayers = 5;
 
-const addUser = (id, username, roomId) => {
+const addUser = (id, username, password) => {
+    if(password !== "svge") {
+        return {error: "Incorrect Password"};
+    };
     if(getRoomFull()) {
         return {error: "Room Full"};
     };
@@ -21,7 +24,7 @@ const addUser = (id, username, roomId) => {
     if(samePlayer) {
         return {error: "You are already in this room"};
     };
-    const newUser = {id, username, roomId};
+    const newUser = {id, username};
     users.push(newUser);
     return { users };
 };

@@ -19,13 +19,13 @@ io.on("connection", (socket) => {
     console.log(`User ${socket.id} has connected to the server`);
 
     socket.on("joinRoom", (data) => {
-        const {error, users} = addUser(socket.id, data.username, data.roomId);
+        const {error, users} = addUser(socket.id, data.username, data.password);
         if(error) {
             io.to(socket.id).emit("joinError", error);
         } else {
-            socket.join(data.roomId);
-            console.log(`User ${socket.id} with username ${data.username} has joined room ${data.roomId}`);
-            io.in(data.roomId).emit("playerJoined", users);
+            socket.join(data.password);
+            console.log(`User ${socket.id} with username ${data.username} has joined.`);
+            io.in(data.password).emit("playerJoined", users);
         };
     });
 
