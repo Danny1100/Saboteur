@@ -1,14 +1,43 @@
-// const users = []
+const users = [];
+const numberOfPlayers = 5;
 
-//  const addUser = ({id, name, room}) => {
-//     const numberOfUsersInRoom = users.filter(user => user.room === room).length
-//     if(numberOfUsersInRoom === 2)
-//     return { error: 'Room full' }
+const addUser = (id, username, roomId) => {
+    if(getRoomFull()) {
+        return {error: "Room Full"};
+    };
+    sameUsername = false;
+    samePlayer = false;
+    users.forEach((user) => {
+        if(user.username === username) {
+            sameUsername = true;
+        };
+        if(user.id === id) {
+            samePlayer = true;
+        };
+    });
+    if(sameUsername) {
+        return {error: "Username Taken"};
+    };
+    if(samePlayer) {
+        return {error: "You are already in this room"};
+    };
+    const newUser = {id, username, roomId};
+    users.push(newUser);
+    return { users };
+};
 
-//     const newUser = { id, name, room }
-//     users.push(newUser)
-//     return { newUser }
-// }
+const getRoomFull = () => {
+    if(users.length < numberOfPlayers) {
+        return false;
+    }
+    return true;
+};
+
+// const getUsers = () => {
+//     return users;
+// };
+
+module.exports = { addUser };
 
 // const removeUser = id => {
 //     const removeIndex = users.findIndex(user => user.id === id)

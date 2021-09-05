@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
+const { addUser } = require('./users')
 
 app.use(cors());
 
@@ -15,11 +16,17 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-    console.log(socket.id);
+    console.log(`User ${socket.id} has connected to the server`);
 
     socket.on("joinRoom", (data) => {
-        socket.join(data.roomId);
-        console.log(`User ${socket.id} with username ${data.username} has joined room ${data.roomId}`);
+        const {error, users} = addUser(socket.id, data.username, data.roomId);
+        if(error) {
+            io.to(socket.id).emit("joinError", error);
+        } else {
+            socket.join(data.roomId);
+            console.log(`User ${socket.id} with username ${data.username} has joined room ${data.roomId}`);
+            io.in(data.roomId).emit("playerJoined", users);
+        };
     });
 
     socket.on("disconnect", () => {
