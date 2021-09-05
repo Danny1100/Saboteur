@@ -9,7 +9,7 @@ function App() {
   const [username, setUsername] = useState('');
   const [roomId, setRoomId] = useState('');
   const [users, setUsers] = useState([]);
-  //might need current user, room state (i.e. display homepage/lobby/game), roomFull?                            ????????????????????
+  //might need current user, room state (i.e. display homepage/lobby/game), roomFull?                            ?????????????????????
 
   //initialise socket on startup and cleanup once finished
   useEffect(() => {
