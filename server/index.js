@@ -3,7 +3,8 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser } = require('./users')
+const { addUser, removeUser, getUsers, getNumberOfPlayers } = require('./users');
+const { initialiseDeck, shuffleDeck, getDeck, initialisePlayerCards, getPlayerCards, getRemainingCards } = require('./deckOfCards');
 
 app.use(cors());
 
@@ -24,13 +25,23 @@ io.on("connection", (socket) => {
             io.to(socket.id).emit("joinError", error);
         } else {
             socket.join(data.password);
-            console.log(`User ${socket.id} with username ${data.username} has joined.`);
-            io.in(data.password).emit("playerJoined", users);
+            console.log(`User ${socket.id} with username ${data.username} has joined the lobby.`);
+            io.in(data.password).emit("playerJoined", {users: users, numberOfPlayers: getNumberOfPlayers()});
         };
+    });
+
+    socket.on("startGame", (password) => {
+        initialiseDeck(getNumberOfPlayers());
+        shuffleDeck();
+        initialisePlayerCards(getUsers());
+        getDeck();
+        io.in(password).emit("initialiseGame", getPlayerCards());
     });
 
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
+        const foundUser = removeUser(socket.id);
+        io.to(foundUser.password).emit("playerLeft", getUsers());
     });
 });
 

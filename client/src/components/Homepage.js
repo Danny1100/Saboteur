@@ -18,10 +18,12 @@ const Homepage = (props) => {
             }}/>
             <br></br>
             <button onClick={props.joinRoom}>Join Room</button>
-            <h3>Players:</h3>
-            <div>{props.users.map((user) => {return <p>{user.username}</p>})}</div>
             <br></br>
-            <button>Start Game</button>
+            <p>{props.numberOfPlayers === 0 ? "Enter a Name and the Password to join a room" : `This lobby needs ${props.numberOfPlayers} players to start the game`}</p>
+            <h3>Players:</h3>
+            <div>{props.users.map((user) => {return <p key={user.username}>{user.username}</p>})}</div>
+            <br></br>
+            <button onClick={props.startGame}>Start Game</button>
         </div>
     );
 };
