@@ -68,4 +68,4 @@ const incrementPlayerTurnIndex = () => {
     return playerTurnIndex;
 };
 
-module.exports = { addUser, getUsers, removeUser, getNumberOfPlayers };
+module.exports = { addUser, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex };

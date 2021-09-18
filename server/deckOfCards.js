@@ -1,5 +1,5 @@
 const deck = [];
-const discarded = {Assassin: 0, Countess: 0, Prophet: 0, Archmage: 0, Rogue: 0};
+const discardPile = {Assassin: 0, Countess: 0, Prophet: 0, Archmage: 0, Rogue: 0};
 const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
 var remainingCards = 0;
 
@@ -64,4 +64,10 @@ const getPlayerCards = () => {
     return playerCards;
 };
 
-module.exports = { initialiseDeck, shuffleDeck, getDeck, getRemainingCards, initialisePlayerCards, getPlayerCards };
+
+//discard pile functions
+const getDiscardPile = () => {
+    return discardPile;
+};
+
+module.exports = { initialiseDeck, shuffleDeck, getDeck, getRemainingCards, initialisePlayerCards, getPlayerCards, getDiscardPile };

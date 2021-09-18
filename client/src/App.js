@@ -66,6 +66,8 @@ function App() {
   //initialise game state
   const [showGame, setShowGame] = useState(false);
   const [playerCards, setPlayerCards] = useState({});
+  const [remainingCards, setRemainingCards] = useState(0);
+  const [discardPile, setDiscardPile] = useState({});
   const [permanentCard, setPermanentCard] = useState("");
   const [activeCard, setActiveCard] = useState("");
   const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
@@ -75,9 +77,11 @@ function App() {
 
   //listens for game updates
   useEffect(() => {
-    socket.on("initialiseGame", (playerCards) => {
+    socket.on("initialiseGame", (data) => {
       setShowGame(true);
-      setPlayerCards(playerCards);
+      setPlayerCards(data.playerCards);
+      setRemainingCards(data.remainingCards);
+      setDiscardPile(data.discardPile);
     });
 
     socket.on("waitingOnPlayerSubmitPermanentCard", (data) => {
@@ -87,6 +91,14 @@ function App() {
         setConfirmButtonMessage(`Waiting on ${data} players`);
       }
     });
+
+    socket.on("notPlayerTurn", () => {
+      setDisplayGameState("notPlayerTurn");
+    });
+
+    socket.on("playerTurn", () => {
+      setDisplayGameState("playerTurn");
+    })
   }, []);
 
   const selectPermanentCard = (event) => {
@@ -121,8 +133,10 @@ function App() {
       : 
       (
         <Game
-        playerCards={playerCards}
         id={socket.id}
+        playerCards={playerCards}
+        remainingCards={remainingCards}
+        discardPile={discardPile}
         permanentCard={permanentCard}
         activeCard={activeCard}
         displayGameState={displayGameState}

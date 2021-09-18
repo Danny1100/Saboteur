@@ -3,8 +3,8 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, removeUser, getUsers, getNumberOfPlayers } = require('./users');
-const { initialiseDeck, shuffleDeck, getDeck, initialisePlayerCards, getPlayerCards, getRemainingCards } = require('./deckOfCards');
+const { addUser, removeUser, getUsers, getNumberOfPlayers, getPlayerTurnIndex } = require('./users');
+const { initialiseDeck, shuffleDeck, getDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards } = require('./playersCards');
 
 app.use(cors());
@@ -36,7 +36,7 @@ io.on("connection", (socket) => {
         shuffleDeck();
         initialisePlayerCards(getUsers());
         getDeck();
-        io.in(password).emit("initialiseGame", getPlayerCards());
+        io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
     });
 
     socket.on("submitPermanentCard", (data) => {
@@ -44,7 +44,8 @@ io.on("connection", (socket) => {
         initialisePlayersActiveCards(socket.id, data);
 
         if(Object.keys(getPlayersPermanentCards()).length === getNumberOfPlayers()) {
-            
+            io.in(data.password).emit("notPlayerTurn");
+            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn");
         } else {
             for(const id in getPlayersPermanentCards()) {
                 io.to(id).emit("waitingOnPlayerSubmitPermanentCard", getNumberOfPlayers()-Object.keys(getPlayersPermanentCards()).length);
