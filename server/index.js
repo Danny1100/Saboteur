@@ -5,6 +5,7 @@ const cors = require('cors');
 const { Server } = require("socket.io");
 const { addUser, removeUser, getUsers, getNumberOfPlayers } = require('./users');
 const { initialiseDeck, shuffleDeck, getDeck, initialisePlayerCards, getPlayerCards, getRemainingCards } = require('./deckOfCards');
+const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards } = require('./playersCards');
 
 app.use(cors());
 
@@ -36,6 +37,19 @@ io.on("connection", (socket) => {
         initialisePlayerCards(getUsers());
         getDeck();
         io.in(password).emit("initialiseGame", getPlayerCards());
+    });
+
+    socket.on("submitPermanentCard", (data) => {
+        initialisePlayersPermanentCards(socket.id, data);
+        initialisePlayersActiveCards(socket.id, data);
+
+        if(Object.keys(getPlayersPermanentCards()).length === getNumberOfPlayers()) {
+            
+        } else {
+            for(const id in getPlayersPermanentCards()) {
+                io.to(id).emit("waitingOnPlayerSubmitPermanentCard", getNumberOfPlayers()-Object.keys(getPlayersPermanentCards()).length);
+            }
+        };
     });
 
     socket.on("disconnect", () => {

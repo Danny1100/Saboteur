@@ -1,6 +1,7 @@
 const users = [];
 const globalPassword = "svge";
-const numberOfPlayers = 2;
+const numberOfPlayers = 3;
+var playerTurnIndex = 0;
 
 const addUser = (id, username, password) => {
     if(password !== globalPassword) {
@@ -45,6 +46,7 @@ const removeUser = (id) => {
     return foundUser;
 };
 
+
 const getRoomFull = () => {
     if(users.length < numberOfPlayers) {
         return false;
@@ -54,6 +56,16 @@ const getRoomFull = () => {
 
 const getNumberOfPlayers = () => {
     return numberOfPlayers;
+};
+
+
+const getPlayerTurnIndex = () => {
+    return playerTurnIndex;
+};
+
+const incrementPlayerTurnIndex = () => {
+    playerTurnIndex = (playerTurnIndex+1)%numberOfPlayers;
+    return playerTurnIndex;
 };
 
 module.exports = { addUser, getUsers, removeUser, getNumberOfPlayers };

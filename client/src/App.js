@@ -66,6 +66,12 @@ function App() {
   //initialise game state
   const [showGame, setShowGame] = useState(false);
   const [playerCards, setPlayerCards] = useState({});
+  const [permanentCard, setPermanentCard] = useState("");
+  const [activeCard, setActiveCard] = useState("");
+  const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
+
+  //states for displaying different values on webpage
+  const [confirmButtonMessage, setConfirmButtonMessage] = useState("Confirm");
 
   //listens for game updates
   useEffect(() => {
@@ -73,7 +79,33 @@ function App() {
       setShowGame(true);
       setPlayerCards(playerCards);
     });
+
+    socket.on("waitingOnPlayerSubmitPermanentCard", (data) => {
+      if(data === 1) {
+        setConfirmButtonMessage("Waiting on 1 player");
+      } else {
+        setConfirmButtonMessage(`Waiting on ${data} players`);
+      }
+    });
   }, []);
+
+  const selectPermanentCard = (event) => {
+    setPermanentCard(event.target.value);
+    if(playerCards[socket.id][0] === event.target.value) {
+      setActiveCard(playerCards[socket.id][1]);
+    } else {
+      setActiveCard(playerCards[socket.id][0]);
+    };
+  };
+
+  const submitPermanentCard = () => {
+    if(permanentCard === "") {
+      alert("Please choose a card to be your permanent card");
+    } else {
+      socket.emit("submitPermanentCard", {permanentCard: permanentCard, activeCard: activeCard, password: password});
+      document.getElementById("confirmPermanentCardButton").disabled = 'disabled';
+    };
+  };
 
   return (
     <div className="App">
@@ -90,7 +122,16 @@ function App() {
       (
         <Game
         playerCards={playerCards}
-        id={socket.id}/>
+        id={socket.id}
+        permanentCard={permanentCard}
+        activeCard={activeCard}
+        displayGameState={displayGameState}
+
+        confirmButtonMessage={confirmButtonMessage}
+
+        selectPermanentCard={selectPermanentCard}
+        submitPermanentCard={submitPermanentCard}
+        />
       )}
     </div>
   );
