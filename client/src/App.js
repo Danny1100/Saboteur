@@ -70,10 +70,17 @@ function App() {
   const [discardPile, setDiscardPile] = useState({});
   const [permanentCard, setPermanentCard] = useState("");
   const [activeCard, setActiveCard] = useState("");
-  const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
 
-  //states for displaying different values on webpage
+  //temporary states for the execute and draw card actions
+  const [chosenPlayer, setChosenPlayer] = useState("");
+  const [chosenPermanentCard, setChosenPermanentCard] = useState("");
+  const [chosenActiveCard, setChosenActiveCard] = useState("");
+
+  //states/variables for displaying different values on webpage
+  const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
   const [confirmButtonMessage, setConfirmButtonMessage] = useState("Confirm");
+  const [history, setHistory] = useState("");
+  const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
 
   //listens for game updates
   useEffect(() => {
@@ -92,15 +99,19 @@ function App() {
       }
     });
 
-    socket.on("notPlayerTurn", () => {
+    socket.on("notPlayerTurn", (data) => {
       setDisplayGameState("notPlayerTurn");
+      setHistory(data.history);
     });
 
-    socket.on("playerTurn", () => {
+    socket.on("playerTurn", (data) => {
       setDisplayGameState("playerTurn");
+      setHistory(data.history);
     })
   }, []);
 
+
+  //selecting and submitting permanent card function at beginning of game
   const selectPermanentCard = (event) => {
     setPermanentCard(event.target.value);
     if(playerCards[socket.id][0] === event.target.value) {
@@ -119,6 +130,46 @@ function App() {
     };
   };
 
+
+  //execute and draw functions
+  const choosePlayer = (event) => {
+    setChosenPlayer(event.target.value);
+  }
+
+  const executeAction = () => {
+    setDisplayGameState("executeChoosePlayer");
+  };
+
+  const executeChooseCards = () => {
+    if(chosenPlayer === "") {
+      alert("Please select a player to execute");
+    } else {
+      setDisplayGameState("executeChooseCards");
+    }
+  }
+
+  const executeChoosePermanentCard = (event) => {
+    setChosenPermanentCard(event.target.value);
+  };
+
+  const executeChooseActiveCard = (event) => {
+    setChosenActiveCard(event.target.value);
+  };
+
+  const executeConfirm = () => {
+    if(chosenPermanentCard === "" || chosenActiveCard === "") {
+      alert("Please choose a permanent and active card;")
+    } else {
+      socket.emit("executeConfirm", {chosenPlayer: chosenPlayer, chosenPermanentCard: chosenPermanentCard, chosenActiveCard: chosenActiveCard});
+    };
+  };
+
+  //TO DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const drawAction = () => {
+
+  };
+
+
   return (
     <div className="App">
       {!showGame ? (
@@ -134,17 +185,31 @@ function App() {
       (
         <Game
         id={socket.id}
+        users={users}
         playerCards={playerCards}
         remainingCards={remainingCards}
         discardPile={discardPile}
         permanentCard={permanentCard}
         activeCard={activeCard}
-        displayGameState={displayGameState}
+        chosenPlayer={chosenPlayer}
 
+        characterCards={characterCards}
         confirmButtonMessage={confirmButtonMessage}
+        history={history}
+        displayGameState={displayGameState}
 
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
+        choosePlayer={choosePlayer}
+        executeAction={executeAction}
+        executeChooseCards={executeChooseCards}
+        executeChoosePermanentCard={executeChoosePermanentCard}
+        executeChooseActiveCard={executeChooseActiveCard}
+        executeConfirm={executeConfirm}
+        drawAction={drawAction}
+
+        chosenPermanentCard={chosenPermanentCard}
+        chosenActiveCard={chosenActiveCard}
         />
       )}
     </div>

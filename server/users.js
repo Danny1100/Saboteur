@@ -31,6 +31,16 @@ const addUser = (id, username, password) => {
     return { users };
 };
 
+const findUser = (username) => {
+    let foundUser = "";
+    users.forEach((user) => {
+        if(user.username === username) {
+            foundUser = user;
+        };
+    });  
+    return foundUser;
+};
+
 const getUsers = () => {
     return users;
 };
@@ -68,4 +78,4 @@ const incrementPlayerTurnIndex = () => {
     return playerTurnIndex;
 };
 
-module.exports = { addUser, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex };
+module.exports = { addUser, findUser, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex };

@@ -3,9 +3,9 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, removeUser, getUsers, getNumberOfPlayers, getPlayerTurnIndex } = require('./users');
+const { addUser, findUser, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex } = require('./users');
 const { initialiseDeck, shuffleDeck, getDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile } = require('./deckOfCards');
-const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards } = require('./playersCards');
+const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, deletePlayersPermanentCards, deletePlayersActiveCards } = require('./playersCards');
 
 app.use(cors());
 
@@ -44,12 +44,24 @@ io.on("connection", (socket) => {
         initialisePlayersActiveCards(socket.id, data);
 
         if(Object.keys(getPlayersPermanentCards()).length === getNumberOfPlayers()) {
-            io.in(data.password).emit("notPlayerTurn");
-            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn");
+            io.in(data.password).emit("notPlayerTurn", {history: `It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: "It is your turn"});
         } else {
             for(const id in getPlayersPermanentCards()) {
                 io.to(id).emit("waitingOnPlayerSubmitPermanentCard", getNumberOfPlayers()-Object.keys(getPlayersPermanentCards()).length);
             }
+        };
+    });
+
+    socket.on("executeConfirm", (data) => {
+        const userId= findUser(data.chosenPlayer).id;
+        const playersPermanentCards = getPlayersPermanentCards();
+        const playersActiveCards = getPlayersActiveCards();
+
+        if(data.chosenPermanentCard === playersPermanentCards[userId] && data.chosenActiveCard === playersActiveCards[userId]) {
+            console.log("success");
+        } else {
+            console.log("fail");
         };
     });
 
