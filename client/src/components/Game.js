@@ -16,12 +16,12 @@ const Game = (props) => {
                                 if(card) {
                                     return (
                                         <span key={index} onChange={props.selectPermanentCard}>
-                                            <input type="radio" value={card} name="playerCards"></input>
+                                            <input type="radio" value={card} name="selectPermanentCard"></input>
                                             <label>{card}</label>
                                         </span>
                                     )
                                 } else {
-                                    return "";
+                                    return "error in selectPermanentCard";
                                 }
                             })}
                         </div>
@@ -134,6 +134,31 @@ const Game = (props) => {
                     </div>
                 ); 
 
+            case "chooseCardToLose":
+                return (
+                    <div id="chooseCardToLose">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                        />
+                        <div style={{paddingTop: "12%"}}>
+                            <h2>Execute Failed. You have lost a card slot. Choose a card to discard.</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="chooseCardToLose"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in chooseCardToLose";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.executeLoseCard}>Confirm</button>
+                    </div>
+                );
 
             default:
                 return <p>Something went wrong. Check the displayGameState hook.</p>

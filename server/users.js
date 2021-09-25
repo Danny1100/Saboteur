@@ -2,7 +2,11 @@ const users = [];
 const globalPassword = "svge";
 const numberOfPlayers = 3;
 var playerTurnIndex = 0;
+const eliminatedPlayers = {};
+var numberOfEliminatedPlayers = 0;
 
+
+//user functions
 const addUser = (id, username, password) => {
     if(password !== globalPassword) {
         return {error: "Incorrect Password"};
@@ -31,13 +35,23 @@ const addUser = (id, username, password) => {
     return { users };
 };
 
-const findUser = (username) => {
+const findUserById = (id) => {
+    let foundUser = "";
+    users.forEach((user) => {
+        if(user.id === id) {
+            foundUser = user;
+        };
+    });  
+    return foundUser;
+};
+
+const findUserByUsername = (username) => {
     let foundUser = "";
     users.forEach((user) => {
         if(user.username === username) {
             foundUser = user;
         };
-    });  
+    });
     return foundUser;
 };
 
@@ -57,6 +71,7 @@ const removeUser = (id) => {
 };
 
 
+//room functions
 const getRoomFull = () => {
     if(users.length < numberOfPlayers) {
         return false;
@@ -69,13 +84,29 @@ const getNumberOfPlayers = () => {
 };
 
 
+//player turn functions
 const getPlayerTurnIndex = () => {
     return playerTurnIndex;
 };
 
-const incrementPlayerTurnIndex = () => {
-    playerTurnIndex = (playerTurnIndex+1)%numberOfPlayers;
+const initialiseEliminatedPlayers = () => {
+    users.map((user) => {
+        eliminatedPlayers[user.id] = false;
+    });
+    return eliminatedPlayers;
+};
+
+const nextPlayerIndex = () => {
+    while(true) {
+        console.log("updating playerTurnIndex");
+        playerTurnIndex = (playerTurnIndex+1)%numberOfPlayers;
+        const id = users[playerTurnIndex].id;
+        if(!eliminatedPlayers[id]) {
+            break;
+        };
+    }
     return playerTurnIndex;
 };
 
-module.exports = { addUser, findUser, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex };
+
+module.exports = { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex };

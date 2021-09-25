@@ -3,7 +3,7 @@ import React from 'react';
 const MainInterface = (props) => {
     return (
         <div>
-            <div className="history" style={{paddingTop: "12%"}}>{props.history}</div>
+            <div className="history" style={{paddingTop: "12%", whiteSpace: "pre-line"}}>{props.history}</div>
 
             <div className="myCards">
                 <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}}>

@@ -17,4 +17,12 @@ const getPlayersActiveCards = () => {
     return playersActiveCards;
 };
 
-module.exports = { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards };
+const setPlayerPermanentCard = (id, data) => {
+    playersPermanentCards[id] = data;
+};
+
+const setPlayerActiveCard = (id, data) => {
+    playersActiveCards[id] = data;
+};
+
+module.exports = { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard };

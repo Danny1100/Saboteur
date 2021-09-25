@@ -73,6 +73,7 @@ function App() {
 
   //temporary states for the execute and draw card actions
   const [chosenPlayer, setChosenPlayer] = useState("");
+  const [chosenCard, setChosenCard] = useState("");
   const [chosenPermanentCard, setChosenPermanentCard] = useState("");
   const [chosenActiveCard, setChosenActiveCard] = useState("");
 
@@ -89,6 +90,26 @@ function App() {
       setPlayerCards(data.playerCards);
       setRemainingCards(data.remainingCards);
       setDiscardPile(data.discardPile);
+    });
+
+    socket.on("updateHistory", (data) => {
+      setHistory(data);
+    });
+
+    socket.on("updateDiscardPile", (data) => {
+      setDiscardPile(data);
+    });
+
+    socket.on("updatePlayerCards", (data) => {
+      setPlayerCards(data);
+    });
+
+    socket.on("updatePermanentCard", (data) => {
+      setPermanentCard(data);
+    });
+
+    socket.on("updateActiveCard", (data) => {
+      setActiveCard(data);
     });
 
     socket.on("waitingOnPlayerSubmitPermanentCard", (data) => {
@@ -108,6 +129,17 @@ function App() {
       setDisplayGameState("playerTurn");
       setHistory(data.history);
     })
+
+    socket.on("executeFailed", () => {
+      setDisplayGameState("chooseCardToLose");
+    });
+
+    socket.on("clearExecuteStates", () => {
+      setChosenPlayer("");
+      setChosenCard("");
+      setChosenPermanentCard("");
+      setChosenActiveCard("");
+    });
   }, []);
 
 
@@ -136,6 +168,10 @@ function App() {
     setChosenPlayer(event.target.value);
   }
 
+  const chooseCard = (event) => {
+    setChosenCard(event.target.value);
+  };
+
   const executeAction = () => {
     setDisplayGameState("executeChoosePlayer");
   };
@@ -158,13 +194,20 @@ function App() {
 
   const executeConfirm = () => {
     if(chosenPermanentCard === "" || chosenActiveCard === "") {
-      alert("Please choose a permanent and active card;")
+      alert("Please choose a permanent and active card")
     } else {
-      socket.emit("executeConfirm", {chosenPlayer: chosenPlayer, chosenPermanentCard: chosenPermanentCard, chosenActiveCard: chosenActiveCard});
+      socket.emit("executeConfirm", {chosenPlayer: chosenPlayer, chosenPermanentCard: chosenPermanentCard, chosenActiveCard: chosenActiveCard, password: password});
     };
   };
 
-  //TO DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const executeLoseCard = () => {
+    if(chosenCard === "") {
+      alert("Please choose a card to discard");
+    } else {
+      socket.emit("executeLoseCard", {chosenCard: chosenCard, password: password});
+    };
+  };
+
   const drawAction = () => {
 
   };
@@ -201,15 +244,14 @@ function App() {
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
         choosePlayer={choosePlayer}
+        chooseCard={chooseCard}
         executeAction={executeAction}
         executeChooseCards={executeChooseCards}
         executeChoosePermanentCard={executeChoosePermanentCard}
         executeChooseActiveCard={executeChooseActiveCard}
         executeConfirm={executeConfirm}
+        executeLoseCard={executeLoseCard}
         drawAction={drawAction}
-
-        chosenPermanentCard={chosenPermanentCard}
-        chosenActiveCard={chosenActiveCard}
         />
       )}
     </div>

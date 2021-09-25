@@ -30,10 +30,6 @@ const shuffleDeck = () => {
     return deck;
 };
 
-const getDeck = () => {
-    return deck;
-};
-
 
 //card functions
 const drawCard = () => {
@@ -64,10 +60,20 @@ const getPlayerCards = () => {
     return playerCards;
 };
 
+const removePlayerCard = (id, card) => {
+    const index = playerCards[id].indexOf(card);
+    playerCards[id].splice(index, 1);
+    return playerCards;
+};
+
 
 //discard pile functions
 const getDiscardPile = () => {
     return discardPile;
 };
 
-module.exports = { initialiseDeck, shuffleDeck, getDeck, getRemainingCards, initialisePlayerCards, getPlayerCards, getDiscardPile };
+const discardCard = (characterCard) => {
+    discardPile[characterCard]++;
+};
+
+module.exports = { initialiseDeck, shuffleDeck, getRemainingCards, initialisePlayerCards, getPlayerCards, removePlayerCard, getDiscardPile, discardCard };
