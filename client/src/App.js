@@ -140,6 +140,14 @@ function App() {
       setChosenPermanentCard("");
       setChosenActiveCard("");
     });
+
+    socket.on("loseScreen", (data) => {
+      setDisplayGameState("loseScreen");
+      setHistory(`${data.winner.username} won. Better luck next time!`)
+    });
+    socket.on("winScreen", (data) => {
+      setDisplayGameState("winScreen");
+    });
   }, []);
 
 

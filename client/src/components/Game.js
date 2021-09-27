@@ -38,18 +38,21 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
-                        />                                         
-                        <MainInterface
-                            history={props.history}
-                            permanentCard={props.permanentCard}
-                            activeCard={props.activeCard}
+                            playerCards={props.playerCards}
                         />
+                        <div>
+                            <MainInterface
+                                history={props.history}
+                                permanentCard={props.permanentCard}
+                                activeCard={props.activeCard}
+                            />
 
-                        <div className="actions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
-                            <button style={{margin: "5%"}} onClick={props.drawAction}>Draw</button>
-                            <button style={{margin: "5%"}} onClick={props.executeAction}>Execute</button>
-                        </div>
-                        
+                            <div className="actions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
+                                <button style={{margin: "2%", marginRight: "25%"}} onClick={props.drawAction}>Draw</button>
+                                <button style={{margin: "2%", marginLeft: "25%"}} onClick={props.executeAction}>Execute</button>
+                            </div>                            
+                        </div>                                         
+
                     </div>
                 );
 
@@ -60,6 +63,7 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            playerCards={props.playerCards}
                         />                        
                         <MainInterface
                             history={props.history}
@@ -76,8 +80,9 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            playerCards={props.playerCards}
                         />
-                        <h2 style={{paddingTop: "12%"}}>Choose a player to execute:</h2>
+                        <h2 style={{paddingTop: "8%"}}>Choose a player to execute:</h2>
                         <div>
                             {props.users && props.users.map((user, index) => {
                                 if(user.id !== props.id) {
@@ -103,8 +108,9 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            playerCards={props.playerCards}
                         />
-                        <h2 style={{paddingTop: "12%"}}>Try to guess {props.chosenPlayer}'s permanent card and active card:</h2>
+                        <h2 style={{paddingTop: "4%"}}>Try to guess {props.chosenPlayer}'s permanent card and active card:</h2>
                         <div>
                             <span style={{display: "inline-block", margin: "3%"}}>
                                 <h3>Permanent Card:</h3>
@@ -140,8 +146,9 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            playerCards={props.playerCards}
                         />
-                        <div style={{paddingTop: "12%"}}>
+                        <div style={{paddingTop: "10%"}}>
                             <h2>Execute Failed. You have lost a card slot. Choose a card to discard.</h2>
                             {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
                                 if(card) {
@@ -157,6 +164,22 @@ const Game = (props) => {
                             })}
                         </div>
                         <button style={{margin: "3%"}} onClick={props.executeLoseCard}>Confirm</button>
+                    </div>
+                );
+
+            case "loseScreen":
+                return (
+                    <div id="loseScreen">
+                        <h2>{props.history}</h2>
+                        <button>Play Again</button>
+                    </div>
+                );
+
+            case "winScreen":
+                return (
+                    <div id="winScreen">
+                        <h2>Congratulations! You won!</h2>
+                        <button>Play Again</button>
                     </div>
                 );
 

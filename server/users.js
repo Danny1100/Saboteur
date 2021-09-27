@@ -108,5 +108,19 @@ const nextPlayerIndex = () => {
     return playerTurnIndex;
 };
 
+const eliminatePlayer = (id) => {
+    eliminatedPlayers[id] = true;
+    numberOfEliminatedPlayers++;
 
-module.exports = { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex };
+    if(numberOfEliminatedPlayers === numberOfPlayers-1) {
+        for(const userId in eliminatedPlayers) {
+            console.log(`player: ${eliminatedPlayers[userId]}`);
+            if(!eliminatedPlayers[userId]) {
+                return findUserById(userId);
+            };
+        };
+    };
+};
+
+
+module.exports = { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer };
