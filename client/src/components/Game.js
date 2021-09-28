@@ -87,7 +87,7 @@ const Game = (props) => {
                         <h2 style={{paddingTop: "8%"}}>Choose a player to execute:</h2>
                         <div>
                             {props.users && props.users.map((user, index) => {
-                                if(user.id !== props.id) {
+                                if(user.id !== props.id && props.playerCards[user.id].length === 2) {
                                     return (
                                         <div key={index} style={{margin: "3%"}}>
                                             <input type="radio" value={user.username} name="executeChoosePlayer" onChange={props.choosePlayer}></input>
@@ -223,6 +223,88 @@ const Game = (props) => {
                         </div>
                         <button onClick={props.executeSuccessDrawCard}>Confirm</button>
                     </div>
+                );
+
+
+            case "drawActionChooseCardToDraw":
+                return (
+                    <div id="drawActionChooseCardToDraw">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div className="myCards">
+                            <h2>Choose a card to be your active card:</h2>
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.drawnCard} name="drawActionChooseCardToDraw"></input>
+                                <label>{props.drawnCard}</label>
+                                <h3>Drawn card</h3>
+                            </span>
+                            <span style={{display: "inline-block", margin: "7%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.activeCard} name="drawActionChooseCardToDraw"></input>
+                                <label>{props.activeCard}</label>
+                                <h3>Previous Card</h3>
+                            </span>
+                        </div>
+                        <button onClick={props.confirmNewCard}>Confirm</button>
+                    </div>
+                );
+
+            case "chooseCharacterAction":
+                return (
+                    <div id="chooseCharacterAction"> 
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div>
+                            <MainInterface
+                                history={props.history}
+                                permanentCard={props.permanentCard}
+                                activeCard={props.activeCard}
+                            />
+
+                            <div className="actions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
+                                <button style={{margin: "5%"}} onClick={props.assassinAction}>Assassin</button>
+                                <button style={{margin: "5%"}} onClick={props.prophetAction}>Prophet</button>
+                                <button style={{margin: "5%"}} onClick={props.archmageAction}>Archmage</button>
+                                <button style={{margin: "5%"}} onClick={props.rogueAction}>Rogue</button>
+                            </div>                            
+                        </div>                                         
+
+                    </div>
+                );
+
+            case "assassinChoosePlayer":
+                return (
+                    <div id="assassinChoosePlayer">
+                    <CardInfo
+                        discardPile={props.discardPile}
+                        remainingCards={props.remainingCards}
+                        users={props.users}
+                        playerCards={props.playerCards}
+                    />
+                    <h2 style={{paddingTop: "8%"}}>Choose a player to use Assassin on:</h2>
+                    <div>
+                        {props.users && props.users.map((user, index) => {
+                            if(user.id !== props.id && props.playerCards[user.id].length !== 0) {
+                                return (
+                                    <div key={index} style={{margin: "3%"}}>
+                                        <input type="radio" value={user.username} name="assassinChoosePlayer" onChange={props.choosePlayer}></input>
+                                        <label>{user.username}</label>                                            
+                                    </div>
+                                );
+                            } else {
+                                return "";
+                            };
+                        })}
+                    </div>
+                    <button onClick={props.assassinConfirm}>Confirm</button>
+                </div>
                 );
 
 

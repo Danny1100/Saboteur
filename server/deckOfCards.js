@@ -32,6 +32,7 @@ const shuffleDeck = () => {
 
 const insertCard = (card) => {
     deck.push(card);
+    remainingCards++;
     return deck;
 };
 

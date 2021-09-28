@@ -18,6 +18,7 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
+    //listening for initial game setup
     console.log(`User ${socket.id} has connected to the server`);
 
     socket.on("joinRoom", (data) => {
@@ -53,6 +54,7 @@ io.on("connection", (socket) => {
         };
     });
 
+    //listening for execute action
     socket.on("executeConfirm", (data) => {
         const playerName = findUserById(socket.id).username;
         const userId= findUserByUsername(data.chosenPlayer).id;
@@ -159,6 +161,30 @@ io.on("connection", (socket) => {
         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: "It is your turn."});
     });
 
+    //listening for draw action
+    socket.on("drawAction", (data) => {
+        socket.emit("drawActionChooseCardToDraw", {drawnCard: drawCard()});
+        io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+    });
+
+    socket.on("confirmNewCard", (data) => {
+        if(data.chosenCard === data.activeCard) {
+            discardCard(data.drawnCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        } else {
+            discardCard(data.activeCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            
+            updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
+            io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+            setPlayerActiveCard(socket.id, data.chosenCard);
+            socket.emit("updateActiveCard", data.chosenCard);
+        };
+        
+        socket.emit("chooseCharacterAction");
+    });
+
+    //listening for client disconnect
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
         const foundUser = removeUser(socket.id);

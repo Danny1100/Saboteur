@@ -63,6 +63,8 @@ function App() {
   };
 
 
+
+
   //initialise game state
   const [showGame, setShowGame] = useState(false);
   const [playerCards, setPlayerCards] = useState({});
@@ -86,6 +88,7 @@ function App() {
 
   //listens for game updates
   useEffect(() => {
+    //initial game setup
     socket.on("initialiseGame", (data) => {
       setShowGame(true);
       setPlayerCards(data.playerCards);
@@ -93,12 +96,17 @@ function App() {
       setDiscardPile(data.discardPile);
     });
 
+    //general update functions
     socket.on("updateHistory", (data) => {
       setHistory(data);
     });
 
     socket.on("updateDiscardPile", (data) => {
       setDiscardPile(data);
+    });
+
+    socket.on("updateRemainingCards", (data) => {
+      setRemainingCards(data);
     });
 
     socket.on("updatePlayerCards", (data) => {
@@ -113,6 +121,7 @@ function App() {
       setActiveCard(data);
     });
 
+    //choosing permanent card at start of game
     socket.on("waitingOnPlayerSubmitPermanentCard", (data) => {
       if(data === 1) {
         setConfirmButtonMessage("Waiting on 1 player");
@@ -121,6 +130,7 @@ function App() {
       }
     });
 
+    //player turn functions
     socket.on("notPlayerTurn", (data) => {
       setDisplayGameState("notPlayerTurn");
       setHistory(data.history);
@@ -131,6 +141,7 @@ function App() {
       setHistory(data.history);
     })
 
+    //execute functions
     socket.on("executeFailed", () => {
       setDisplayGameState("executeFailedChooseCardToLose");
     });
@@ -152,6 +163,17 @@ function App() {
       setDrawnCard(data.drawnCard);
     });
 
+    //draw functions
+    socket.on("drawActionChooseCardToDraw", (data) => {
+      setDisplayGameState("drawActionChooseCardToDraw");
+      setDrawnCard(data.drawnCard);
+    });
+
+    socket.on("chooseCharacterAction", () => {
+      setDisplayGameState("chooseCharacterAction");
+    });
+
+    //game over screens
     socket.on("loseScreen", (data) => {
       setDisplayGameState("loseScreen");
       setHistory(`${data.winner.username} won. Better luck next time!`)
@@ -193,7 +215,17 @@ function App() {
   };
 
   const executeAction = () => {
-    setDisplayGameState("executeChoosePlayer");
+    let validPlayer = false;
+    for(let id in playerCards) {
+      if(id !== socket.id && playerCards[id].length === 2) {
+        validPlayer = true;
+      };
+    };
+    if(validPlayer) {
+      setDisplayGameState("executeChoosePlayer");
+    } else {
+      alert("No other players have 2 card slots. You cannot execute.");
+    };
   };
 
   const executeChooseCards = () => {
@@ -246,10 +278,48 @@ function App() {
   };
 
   const drawAction = () => {
+    socket.emit("drawAction", {password: password});
+  };
+
+  const confirmNewCard = () => {
+    if(chosenCard === "") {
+      alert("Please choose a card to be your active card.");
+    } else {
+      socket.emit("confirmNewCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, activeCard: activeCard});
+      setDrawnCard("");
+      setChosenCard("");
+    }
+  };
+
+  //character action functions
+  const assassinAction = () => {
+    if(permanentCard === "Countess" || activeCard === "Countess") {
+      alert("You cannot use Assassin if you hold a Countess");
+    } else {
+      setDisplayGameState("assassinChoosePlayer");
+    }
+  };
+
+  const assassinConfirm = () => {
+    alert("worked");
+    setChosenPlayer("");
+  };
+
+  const prophetAction = () => {
+
+  };
+
+  const archmageAction = () => {
+
+  };
+
+  const rogueAction = () => {
 
   };
 
 
+
+  
   return (
     <div className="App">
       {!showGame ? (
@@ -281,6 +351,7 @@ function App() {
 
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
+
         choosePlayer={choosePlayer}
         chooseCard={chooseCard}
         executeAction={executeAction}
@@ -291,7 +362,15 @@ function App() {
         executeFailedLoseCard={executeFailedLoseCard}
         executeSuccessLoseCard={executeSuccessLoseCard}
         executeSuccessDrawCard={executeSuccessDrawCard}
+
         drawAction={drawAction}
+        confirmNewCard={confirmNewCard}
+
+        assassinAction={assassinAction}
+        assassinConfirm={assassinConfirm}
+        prophetAction={prophetAction}
+        archmageAction={archmageAction}
+        rogueAction={rogueAction}
         />
       )}
     </div>

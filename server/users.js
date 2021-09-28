@@ -114,7 +114,6 @@ const eliminatePlayer = (id) => {
 
     if(numberOfEliminatedPlayers === numberOfPlayers-1) {
         for(const userId in eliminatedPlayers) {
-            console.log(`player: ${eliminatedPlayers[userId]}`);
             if(!eliminatedPlayers[userId]) {
                 return findUserById(userId);
             };
