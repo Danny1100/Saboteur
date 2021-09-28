@@ -30,6 +30,11 @@ const shuffleDeck = () => {
     return deck;
 };
 
+const insertCard = (card) => {
+    deck.push(card);
+    return deck;
+};
+
 
 //card functions
 const drawCard = () => {
@@ -60,6 +65,15 @@ const getPlayerCards = () => {
     return playerCards;
 };
 
+const updatePlayerCard = (id, oldCard, newCard) => {
+    if(playerCards[id][0] === oldCard) {
+        playerCards[id][0] = newCard;
+    } else {
+        playerCards[id][1] = newCard;
+    };
+    return playerCards;
+};
+
 const removePlayerCard = (id, card) => {
     const index = playerCards[id].indexOf(card);
     playerCards[id].splice(index, 1);
@@ -76,4 +90,4 @@ const discardCard = (characterCard) => {
     discardPile[characterCard]++;
 };
 
-module.exports = { initialiseDeck, shuffleDeck, getRemainingCards, initialisePlayerCards, getPlayerCards, removePlayerCard, getDiscardPile, discardCard };
+module.exports = { initialiseDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, getDiscardPile, discardCard };

@@ -4,7 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
 const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer } = require('./users');
-const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard } = require('./deckOfCards');
+const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard } = require('./playersCards');
 
 app.use(cors());
@@ -60,8 +60,15 @@ io.on("connection", (socket) => {
         const playersActiveCards = getPlayersActiveCards();
 
         if(data.chosenPermanentCard === playersPermanentCards[userId] && data.chosenActiveCard === playersActiveCards[userId]) {
-            //other player chooses a card to discard, then shuffles the non-discarded card into the deck and gets a new card, then goes to next player turn. Send history to all other players.
-            console.log("to code: successful execute");
+            socket.to(data.password).emit("updateHistory", 
+                `${playerName} tried to execute ${data.chosenPlayer} and succeeded. They guessed:
+                Permanent Card: ${data.chosenPermanentCard}
+                Active Card: ${data.chosenActiveCard}`);
+
+            socket.emit("clearExecuteStates");
+            socket.emit("notPlayerTurn", {history: `You successfully executed ${data.chosenPlayer}`});
+
+            io.to(userId).emit("executeSuccess");
         } else {
             socket.to(data.password).emit("updateHistory", 
                 `${playerName} tried to execute ${data.chosenPlayer} and failed. They guessed:
@@ -71,9 +78,7 @@ io.on("connection", (socket) => {
         };
     });
 
-    socket.on("executeLoseCard", (data) => {
-        const playerName = findUserById(socket.id).username;
-
+    socket.on("executeFailedLoseCard", (data) => {
         discardCard(data.chosenCard);
         io.in(data.password).emit("updateDiscardPile", getDiscardPile());
 
@@ -82,6 +87,7 @@ io.on("connection", (socket) => {
 
         socket.emit("clearExecuteStates");
 
+        const playerName = findUserById(socket.id).username;
         if(getPlayerCards()[socket.id].length === 0) {
             setPlayerActiveCard(socket.id, "");
             socket.emit("updateActiveCard", "");
@@ -111,6 +117,46 @@ io.on("connection", (socket) => {
             io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
                 It is your turn.`});  
         };      
+    });
+
+    socket.on("executeSuccessLoseCard", (data) => {
+        discardCard(data.chosenCard);
+        io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+        removePlayerCard(socket.id, data.chosenCard);
+        io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+        setPlayerPermanentCard(socket.id, "");
+        socket.emit("updatePermanentCard", "");
+        setPlayerActiveCard(socket.id, getPlayerCards()[socket.id][0]);
+        socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
+
+        const playerName = findUserById(socket.id).username;
+        io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. They discarded ${data.chosenCard}. They now have the choice to draw a new card.`);
+
+        socket.emit("executeSuccessChooseCardToDraw", {drawnCard: drawCard()});
+    });
+
+    socket.on("executeSuccessDrawCard", (data) => {
+        if(data.chosenCard === data.activeCard) {
+            insertCard(data.drawnCard);
+            shuffleDeck();
+        } else {
+            updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
+            socket.emit("updatePlayerCards", getPlayerCards());
+
+            setPlayerActiveCard(socket.id, data.chosenCard)
+            socket.emit("updateActiveCard", data.chosenCard);
+
+            insertCard(data.activeCard);
+            shuffleDeck();
+        }
+
+        socket.emit("clearExecuteStates");
+
+        nextPlayerIndex();
+        io.in(data.password).emit("notPlayerTurn", {history: `It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: "It is your turn."});
     });
 
     socket.on("disconnect", () => {

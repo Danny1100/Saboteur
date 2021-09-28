@@ -38,6 +38,7 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            users={props.users}
                             playerCards={props.playerCards}
                         />
                         <div>
@@ -56,13 +57,13 @@ const Game = (props) => {
                     </div>
                 );
 
-
             case "notPlayerTurn":
                 return (
                     <div id="notPlayerTurn">
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            users={props.users}
                             playerCards={props.playerCards}
                         />                        
                         <MainInterface
@@ -72,7 +73,7 @@ const Game = (props) => {
                         />
                     </div>
                 );
-            
+
 
             case "executeChoosePlayer":
                 return (
@@ -80,6 +81,7 @@ const Game = (props) => {
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            users={props.users}
                             playerCards={props.playerCards}
                         />
                         <h2 style={{paddingTop: "8%"}}>Choose a player to execute:</h2>
@@ -101,13 +103,13 @@ const Game = (props) => {
                     </div>
                 );
 
-
             case "executeChooseCards":
                 return (
                     <div id="executeChooseCards">
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            users={props.users}
                             playerCards={props.playerCards}
                         />
                         <h2 style={{paddingTop: "4%"}}>Try to guess {props.chosenPlayer}'s permanent card and active card:</h2>
@@ -140,12 +142,13 @@ const Game = (props) => {
                     </div>
                 ); 
 
-            case "chooseCardToLose":
+            case "executeFailedChooseCardToLose":
                 return (
-                    <div id="chooseCardToLose">
+                    <div id="executeFailedChooseCardToLose">
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
+                            users={props.users}
                             playerCards={props.playerCards}
                         />
                         <div style={{paddingTop: "10%"}}>
@@ -154,18 +157,74 @@ const Game = (props) => {
                                 if(card) {
                                     return (
                                         <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
-                                            <input type="radio" value={card} name="chooseCardToLose"></input>
+                                            <input type="radio" value={card} name="executeFailedChooseCardToLose"></input>
                                             <label>{card}</label>
                                         </span>
                                     );
                                 } else {
-                                    return "error in chooseCardToLose";
+                                    return "error in executeFailedChooseCardToLose";
                                 }
                             })}
                         </div>
-                        <button style={{margin: "3%"}} onClick={props.executeLoseCard}>Confirm</button>
+                        <button style={{margin: "3%"}} onClick={props.executeFailedLoseCard}>Confirm</button>
                     </div>
                 );
+
+
+            case "executeSuccessChooseCardToLose":
+                return (
+                    <div id="executeSuccessChooseCardToLose">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div style={{paddingTop: "10%"}}>
+                            <h2>You were successfully executed. You have lost a card slot. Choose a card to discard.</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="executeSuccessChooseCardToLose"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in executeSuccessChooseCardToLose";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.executeSuccessLoseCard}>Confirm</button>
+                    </div>
+                );               
+            
+            case "executeSuccessChooseCardToDraw":
+                return (
+                    <div id="executeSuccessChooseCardToDraw">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div className="myCards">
+                            <h2>Choose a card to be your active card:</h2>
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.drawnCard} name="executeSuccessChooseCardToDraw"></input>
+                                <label>{props.drawnCard}</label>
+                                <h3>Drawn card</h3>
+                            </span>
+                            <span style={{display: "inline-block", margin: "7%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.activeCard} name="executeSuccessChooseCardToDraw"></input>
+                                <label>{props.activeCard}</label>
+                                <h3>Previous Card</h3>
+                            </span>
+                        </div>
+                        <button onClick={props.executeSuccessDrawCard}>Confirm</button>
+                    </div>
+                );
+
 
             case "loseScreen":
                 return (
@@ -182,6 +241,7 @@ const Game = (props) => {
                         <button>Play Again</button>
                     </div>
                 );
+
 
             default:
                 return <p>Something went wrong. Check the displayGameState hook.</p>

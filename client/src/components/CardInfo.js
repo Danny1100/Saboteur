@@ -12,8 +12,8 @@ const CardInfo = (props) => {
 
             <span className="remainingCardSlots" style={{display: "inline-block"}}>
                 <h3>Remaining Card Slots:</h3>
-                {props.playerCards && Object.keys(props.playerCards).map((id, index) => {
-                    return <p key={index}>{`${id}: ${props.playerCards[id].length}`}</p>
+                {props.users && props.users.map((user, index) => {
+                    return <p key={index}>{`${user.username}: ${props.playerCards[user.id].length}`}</p>
                 })}
             </span>
 

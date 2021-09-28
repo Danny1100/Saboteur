@@ -76,6 +76,7 @@ function App() {
   const [chosenCard, setChosenCard] = useState("");
   const [chosenPermanentCard, setChosenPermanentCard] = useState("");
   const [chosenActiveCard, setChosenActiveCard] = useState("");
+  const [drawnCard, setDrawnCard] = useState("");
 
   //states/variables for displaying different values on webpage
   const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
@@ -131,7 +132,11 @@ function App() {
     })
 
     socket.on("executeFailed", () => {
-      setDisplayGameState("chooseCardToLose");
+      setDisplayGameState("executeFailedChooseCardToLose");
+    });
+
+    socket.on("executeSuccess", () => {
+      setDisplayGameState("executeSuccessChooseCardToLose");
     });
 
     socket.on("clearExecuteStates", () => {
@@ -141,10 +146,17 @@ function App() {
       setChosenActiveCard("");
     });
 
+    socket.on("executeSuccessChooseCardToDraw", (data) => {
+      setDisplayGameState("executeSuccessChooseCardToDraw");
+      setChosenCard("");
+      setDrawnCard(data.drawnCard);
+    });
+
     socket.on("loseScreen", (data) => {
       setDisplayGameState("loseScreen");
       setHistory(`${data.winner.username} won. Better luck next time!`)
     });
+
     socket.on("winScreen", (data) => {
       setDisplayGameState("winScreen");
     });
@@ -208,11 +220,28 @@ function App() {
     };
   };
 
-  const executeLoseCard = () => {
+  const executeFailedLoseCard = () => {
     if(chosenCard === "") {
       alert("Please choose a card to discard");
     } else {
-      socket.emit("executeLoseCard", {chosenCard: chosenCard, password: password});
+      socket.emit("executeFailedLoseCard", {chosenCard: chosenCard, password: password});
+    };
+  };
+
+  const executeSuccessLoseCard = () => {
+    if(chosenCard === "") {
+      alert("Please choose a card to discard");
+    } else {
+      socket.emit("executeSuccessLoseCard", {chosenCard: chosenCard, password: password});
+    };
+  };
+
+  const executeSuccessDrawCard = () => {
+    if(chosenCard === "") {
+      alert("Please choose a card to keep");
+    } else {
+      socket.emit("executeSuccessDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, activeCard: activeCard});
+      setDrawnCard("");
     };
   };
 
@@ -243,6 +272,7 @@ function App() {
         permanentCard={permanentCard}
         activeCard={activeCard}
         chosenPlayer={chosenPlayer}
+        drawnCard={drawnCard}
 
         characterCards={characterCards}
         confirmButtonMessage={confirmButtonMessage}
@@ -258,7 +288,9 @@ function App() {
         executeChoosePermanentCard={executeChoosePermanentCard}
         executeChooseActiveCard={executeChooseActiveCard}
         executeConfirm={executeConfirm}
-        executeLoseCard={executeLoseCard}
+        executeFailedLoseCard={executeFailedLoseCard}
+        executeSuccessLoseCard={executeSuccessLoseCard}
+        executeSuccessDrawCard={executeSuccessDrawCard}
         drawAction={drawAction}
         />
       )}
