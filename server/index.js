@@ -3,7 +3,7 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer } = require('./users');
+const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers } = require('./users');
 const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard } = require('./playersCards');
 
@@ -37,6 +37,7 @@ io.on("connection", (socket) => {
         shuffleDeck();
         initialisePlayerCards(getUsers());
         initialiseEliminatedPlayers();
+        initialisePlayersPassedChallenge();
         io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
     });
 
@@ -182,6 +183,89 @@ io.on("connection", (socket) => {
         };
         
         socket.emit("chooseCharacterAction");
+    });
+
+    //listening for character actions
+    socket.on("assassinChosePlayer", (data) => {
+        for(let id in getEliminatedPlayers()) {
+            if(!getEliminatedPlayers()[id]) {
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), chosenPlayer: data.chosenPlayer, characterAction: "Assassin"});
+            } else {
+                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Assassin on ${data.chosenPlayer}. Waiting to see if other players will challenge.`});
+            };
+        };
+
+        io.to(findUserByUsername(data.chosenPlayer).id).emit("countessAction", {player: findUserById(socket.id)});
+
+        updatePlayersPassedChallenge(socket.id);
+        socket.emit("updateHistory", `You are using Assassin on ${data.chosenPlayer}. Waiting to see if other players will challenge.`)
+        socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+
+        setActionChosenPlayer(data.chosenPlayer);
+        //set opponentAction and assassin's chosenPlayer (both on server and client) back to blank at the finish of assassin action
+        //reset playersPassedChallenge and playersWaiting when someone challenges, or opponent uses countess
+    });
+
+    socket.on("assassinGuessActiveCard", (data) => {
+        const chosenPlayerId = findUserByUsername(data.chosenPlayer).id;
+        if(data.chosenCard === getPlayersActiveCards()[chosenPlayerId]) {
+            //discard activeCard, update and emit playerCards, activeCard, permanentCard, check if eliminated
+            console.log("correct");
+        } else {
+            nextPlayerIndex();
+            const currentPlayer = findUserById(socket.id);
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} failed to assassinate ${data.chosenPlayer}.
+                ${currentPlayer.username} guessed that ${data.chosenPlayer}'s active card was ${data.chosenCard} and was incorrect.
+                It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} failed to assassinate ${data.chosenPlayer}.
+                ${currentPlayer.username} guessed that ${data.chosenPlayer}'s active card was ${data.chosenCard} and was incorrect.
+                It is your turn.`});
+        };
+    });
+
+    //listening for challenge actions
+    socket.on("challengePass", (data) => {
+        updatePlayersPassedChallenge(socket.id);
+        let playersWaiting = calculatePlayersWaiting();
+        if(playersWaiting === 0) {
+            io.in(data.password).emit("updatePlayersWaiting", 0);
+            resetPlayersPassedChallenge();
+
+            const currentPlayer = getUsers()[getPlayerTurnIndex()];
+            switch (data.opponentAction) {
+                case "Assassin":
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and was not challenged.
+                        ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
+                    io.to(currentPlayer.id).emit("assassinGuessActiveCard");
+                    setActionChosenPlayer("");
+                    break;
+
+                case "Prophet":
+                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
+                    console.log("Prophet");
+                    break;
+
+                case "Archmage":
+                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
+                    console.log("Archmage");
+                    break;
+
+                case "Rogue":
+                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
+                    console.log("Rogue");
+                    break;
+
+                default:
+                    console.log("Error in challengePass.");
+            };
+        } else {
+            let playersPassedChallenge = getPlayersPassedChallenge();
+            for(let id in playersPassedChallenge) {
+                if(playersPassedChallenge[id]) {
+                    io.to(id).emit("challengeWait", {playersWaiting: playersWaiting});
+                }
+            };
+        };
     });
 
     //listening for client disconnect

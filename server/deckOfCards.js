@@ -21,12 +21,11 @@ const initialiseDeck = (numberOfPlayers) => {
 
 const shuffleDeck = () => {
     for(let i = deck.length-1; i > 0; i--) {
-        const newIndex = Math.floor(Math.random() * i+1);
+        const newIndex = Math.floor(Math.random() * (i+1));
         const oldValue = deck[newIndex];
         deck[newIndex] = deck[i];
         deck[i] = oldValue;
     };
-
     return deck;
 };
 

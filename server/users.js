@@ -1,9 +1,11 @@
 const users = [];
 const globalPassword = "svge";
-const numberOfPlayers = 3;
+const numberOfPlayers = 4;
 var playerTurnIndex = 0;
 const eliminatedPlayers = {};
 var numberOfEliminatedPlayers = 0;
+const playersPassedChallenge = {};
+var actionChosenPlayer = "";
 
 
 //user functions
@@ -96,6 +98,10 @@ const initialiseEliminatedPlayers = () => {
     return eliminatedPlayers;
 };
 
+const getEliminatedPlayers = () => {
+    return eliminatedPlayers;
+};
+
 const nextPlayerIndex = () => {
     while(true) {
         console.log("updating playerTurnIndex");
@@ -122,4 +128,54 @@ const eliminatePlayer = (id) => {
 };
 
 
-module.exports = { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer };
+//functions for calculating players who've passed on the challenge
+const initialisePlayersPassedChallenge = () => {
+    for(let user of users) {
+        playersPassedChallenge[user.id] = false;
+    };
+    return playersPassedChallenge;
+};
+
+const getPlayersPassedChallenge = () => {
+    return playersPassedChallenge;
+};
+
+const updatePlayersPassedChallenge = (id) => {
+    playersPassedChallenge[id] = true;
+    return playersPassedChallenge;
+};
+
+const calculatePlayersWaiting = () => {
+    let count = 0;
+    for(let id in playersPassedChallenge) {
+        if(playersPassedChallenge[id]) {
+            count++;
+        };
+    };
+
+    return numberOfPlayers - count - numberOfEliminatedPlayers;
+};
+
+const resetPlayersPassedChallenge = () => {
+    for(let id in playersPassedChallenge) {
+        playersPassedChallenge[id] = false;
+    };
+    return playersPassedChallenge;
+};
+
+//functions for actionChosenPlayer variable which keeps track of the opponent who was chosen
+const getActionChosenPlayer = () => {
+    return actionChosenPlayer;
+};
+
+const setActionChosenPlayer = (username) => {
+    actionChosenPlayer = username;
+    return actionChosenPlayer;
+};
+
+module.exports = { 
+    addUser, findUserById, findUserByUsername, getUsers, removeUser, 
+    getNumberOfPlayers, 
+    getPlayerTurnIndex, initialiseEliminatedPlayers, getEliminatedPlayers, nextPlayerIndex, eliminatePlayer, 
+    initialisePlayersPassedChallenge, getPlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, resetPlayersPassedChallenge,
+    getActionChosenPlayer, setActionChosenPlayer };

@@ -307,6 +307,101 @@ const Game = (props) => {
                 </div>
                 );
 
+            case "assassinGuessActiveCard":
+                return (
+                    <div id="assassinGuessActiveCard">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <h2 style={{paddingTop: "4%"}}>Guess {props.chosenPlayer}'s active card:</h2>
+                        <div style={{margin: "3%"}}>
+                            {props.characterCards.map((characterCard, index) => {
+                                return (
+                                    <div key={index}>
+                                        <input type="radio" value={characterCard} name="assassinGuessActiveCard" onChange={props.chooseCard}></input>
+                                        <label>{characterCard}</label>                                            
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button onClick={props.assassinGuessActiveCard}>Confirm</button>
+                    </div>
+                );
+
+
+            case "challengeAction":
+                return (
+                    <div id="challengeAction">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />                        
+                        <MainInterface
+                            history={props.history}
+                            permanentCard={props.permanentCard}
+                            activeCard={props.activeCard}
+                        />
+                        <div className="challengeActions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
+                            {
+                                {
+                                    "Assassin": <button style={{margin: "2%", marginRight: "25%"}}>Challenge</button>,
+                                    "Prophet": <p>Prophet</p>,
+                                    "Archmage": <p>Archmage</p>,
+                                    "Rogue": <p>Rogue</p>
+                                }[props.opponentAction]
+                            }
+                            <button style={{margin: "2%", marginLeft: "25%"}} onClick={props.challengePass}>Pass</button>
+                        </div>
+                    </div>
+                );
+
+            case "countessAction":
+                return (
+                    <div id="countessAction">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />                        
+                        <MainInterface
+                            history={props.history}
+                            permanentCard={props.permanentCard}
+                            activeCard={props.activeCard}
+                        />
+                        <div className="countessActions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
+                            <button style={{margin: "2%", marginRight: "15%"}}>Challenge</button>
+                            <button style={{margin: "2%", marginLeft: "10%", marginRight: "10%"}}>Countess</button>
+                            <button style={{margin: "2%", marginLeft: "15%"}} onClick={props.challengePass}>Pass</button>
+                        </div>
+                    </div>
+                );
+
+            case "challengeWait":
+                return (
+                    <div id="challengeWait">
+                      <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />                        
+                        <MainInterface
+                            history={props.history}
+                            permanentCard={props.permanentCard}
+                            activeCard={props.activeCard}
+                        />
+                        <h3>
+                            {props.playersWaiting === 1 ? "Waiting on 1 player" : `Waiting on ${props.playersWaiting} players`}
+                        </h3>  
+                    </div>
+                );
+
 
             case "loseScreen":
                 return (

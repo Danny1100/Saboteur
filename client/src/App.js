@@ -79,12 +79,14 @@ function App() {
   const [chosenPermanentCard, setChosenPermanentCard] = useState("");
   const [chosenActiveCard, setChosenActiveCard] = useState("");
   const [drawnCard, setDrawnCard] = useState("");
+  const [opponentAction, setOpponentAction] = useState("");
 
   //states/variables for displaying different values on webpage
   const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
   const [confirmButtonMessage, setConfirmButtonMessage] = useState("Confirm");
   const [history, setHistory] = useState("");
   const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
+  const [playersWaiting, setPlayersWaiting] = useState(0);
 
   //listens for game updates
   useEffect(() => {
@@ -119,6 +121,10 @@ function App() {
 
     socket.on("updateActiveCard", (data) => {
       setActiveCard(data);
+    });
+
+    socket.on("updatePlayersWaiting", (data) => {
+      setPlayersWaiting(data);
     });
 
     //choosing permanent card at start of game
@@ -171,6 +177,28 @@ function App() {
 
     socket.on("chooseCharacterAction", () => {
       setDisplayGameState("chooseCharacterAction");
+    });
+
+    //character Actions
+    socket.on("assassinGuessActiveCard", () => {
+      setDisplayGameState("assassinGuessActiveCard");
+    });
+
+    //challenge actions
+    socket.on("challengeAction", (data) => {
+      setDisplayGameState("challengeAction");
+      setHistory(`${data.player.username} is using ${data.characterAction} on ${data.chosenPlayer}. Would you like to challenge this action?`);
+      setOpponentAction(data.characterAction);
+    });
+
+    socket.on("countessAction", (data) => {
+      setDisplayGameState("countessAction");
+      setHistory(`${data.player.username} is using Assassin on you. Would you like to challenge or call Countess against this action?`);
+    });
+
+    socket.on("challengeWait", (data) => {
+      setDisplayGameState("challengeWait");
+      setPlayersWaiting(data.playersWaiting);
     });
 
     //game over screens
@@ -301,8 +329,17 @@ function App() {
   };
 
   const assassinConfirm = () => {
-    alert("worked");
-    setChosenPlayer("");
+    socket.emit("assassinChosePlayer", {password: password, chosenPlayer: chosenPlayer});
+  };
+
+  const assassinGuessActiveCard = () => {
+    if(chosenCard === "") {
+      alert("Please choose a card");
+    } else {
+      socket.emit("assassinGuessActiveCard", {password: password, chosenPlayer: chosenPlayer, chosenCard: chosenCard});
+      setChosenCard("");
+      setChosenPlayer("");
+    }
   };
 
   const prophetAction = () => {
@@ -315,6 +352,11 @@ function App() {
 
   const rogueAction = () => {
 
+  };
+
+  //challenge functions
+  const challengePass = () => {
+    socket.emit("challengePass", {password: password, opponentAction: opponentAction});
   };
 
 
@@ -343,11 +385,13 @@ function App() {
         activeCard={activeCard}
         chosenPlayer={chosenPlayer}
         drawnCard={drawnCard}
+        opponentAction={opponentAction}
 
         characterCards={characterCards}
         confirmButtonMessage={confirmButtonMessage}
         history={history}
         displayGameState={displayGameState}
+        playersWaiting={playersWaiting}
 
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
@@ -368,9 +412,12 @@ function App() {
 
         assassinAction={assassinAction}
         assassinConfirm={assassinConfirm}
+        assassinGuessActiveCard={assassinGuessActiveCard}
         prophetAction={prophetAction}
         archmageAction={archmageAction}
         rogueAction={rogueAction}
+
+        challengePass={challengePass}
         />
       )}
     </div>
