@@ -347,14 +347,7 @@ const Game = (props) => {
                             activeCard={props.activeCard}
                         />
                         <div className="challengeActions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
-                            {
-                                {
-                                    "Assassin": <button style={{margin: "2%", marginRight: "25%"}}>Challenge</button>,
-                                    "Prophet": <p>Prophet</p>,
-                                    "Archmage": <p>Archmage</p>,
-                                    "Rogue": <p>Rogue</p>
-                                }[props.opponentAction]
-                            }
+                            <button style={{margin: "2%", marginRight: "25%"}} onClick={props.challengeAction}>Challenge</button>
                             <button style={{margin: "2%", marginLeft: "25%"}} onClick={props.challengePass}>Pass</button>
                         </div>
                     </div>
@@ -375,7 +368,7 @@ const Game = (props) => {
                             activeCard={props.activeCard}
                         />
                         <div className="countessActions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
-                            <button style={{margin: "2%", marginRight: "15%"}}>Challenge</button>
+                            <button style={{margin: "2%", marginRight: "15%"}} onClick={props.challengeAction}>Challenge</button>
                             <button style={{margin: "2%", marginLeft: "10%", marginRight: "10%"}}>Countess</button>
                             <button style={{margin: "2%", marginLeft: "15%"}} onClick={props.challengePass}>Pass</button>
                         </div>
@@ -399,6 +392,34 @@ const Game = (props) => {
                         <h3>
                             {props.playersWaiting === 1 ? "Waiting on 1 player" : `Waiting on ${props.playersWaiting} players`}
                         </h3>  
+                    </div>
+                );
+
+            case "challengeReveal":
+                return (
+                    <div id="challengeReveal">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div style={{paddingTop: "10%"}}>
+                            <h2>You used {props.opponentAction} on {props.chosenPlayer} and {props.challengePlayer} has challenged you. Choose a card to reveal.</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="challengeReveal"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in challengeReveal";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.challengeReveal}>Confirm</button>
                     </div>
                 );
 

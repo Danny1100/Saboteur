@@ -104,7 +104,6 @@ const getEliminatedPlayers = () => {
 
 const nextPlayerIndex = () => {
     while(true) {
-        console.log("updating playerTurnIndex");
         playerTurnIndex = (playerTurnIndex+1)%numberOfPlayers;
         const id = users[playerTurnIndex].id;
         if(!eliminatedPlayers[id]) {

@@ -80,6 +80,7 @@ function App() {
   const [chosenActiveCard, setChosenActiveCard] = useState("");
   const [drawnCard, setDrawnCard] = useState("");
   const [opponentAction, setOpponentAction] = useState("");
+  const [challengePlayer, setChallengePlayer] = useState("");
 
   //states/variables for displaying different values on webpage
   const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
@@ -183,7 +184,7 @@ function App() {
       setChosenPlayer("");
       setChosenCard("");
       setDrawnCard("");
-      setOpponentAction("");
+      setChallengePlayer("");
     });
 
     //character Actions
@@ -208,8 +209,17 @@ function App() {
       setPlayersWaiting(data.playersWaiting);
     });
 
+    socket.on("challengeReveal", (data) => {
+      setDisplayGameState("challengeReveal");
+      setChallengePlayer(data.challengePlayer.username);
+    });
+
     socket.on("clearPlayersWaiting", () => {
       setPlayersWaiting(0);
+    });
+
+    socket.on("clearOpponentAction", () => {
+      setOpponentAction("");
     });
 
     //game over screens
@@ -370,6 +380,14 @@ function App() {
     socket.emit("challengePass", {password: password, opponentAction: opponentAction});
   };
 
+  const challengeAction = () => {
+    socket.emit("challengeAction", {password: password, opponentAction: opponentAction});
+  };
+
+  const challengeReveal = () => {
+    socket.emit("challengeReveal", {password: password, chosenPlayer: chosenPlayer, challengePlayer:challengePlayer, chosenCard: chosenCard, opponentAction: opponentAction});
+  };
+
 
 
   
@@ -403,6 +421,7 @@ function App() {
         history={history}
         displayGameState={displayGameState}
         playersWaiting={playersWaiting}
+        challengePlayer={challengePlayer}
 
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
@@ -429,6 +448,8 @@ function App() {
         rogueAction={rogueAction}
 
         challengePass={challengePass}
+        challengeAction={challengeAction}
+        challengeReveal={challengeReveal}
         />
       )}
     </div>
