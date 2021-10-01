@@ -179,6 +179,13 @@ function App() {
       setDisplayGameState("chooseCharacterAction");
     });
 
+    socket.on("clearDrawStates", () => {
+      setChosenPlayer("");
+      setChosenCard("");
+      setDrawnCard("");
+      setOpponentAction("");
+    });
+
     //character Actions
     socket.on("assassinGuessActiveCard", () => {
       setDisplayGameState("assassinGuessActiveCard");
@@ -199,6 +206,10 @@ function App() {
     socket.on("challengeWait", (data) => {
       setDisplayGameState("challengeWait");
       setPlayersWaiting(data.playersWaiting);
+    });
+
+    socket.on("clearPlayersWaiting", () => {
+      setPlayersWaiting(0);
     });
 
     //game over screens

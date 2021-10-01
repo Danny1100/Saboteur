@@ -1,6 +1,6 @@
 const users = [];
 const globalPassword = "svge";
-const numberOfPlayers = 4;
+const numberOfPlayers = 3;
 var playerTurnIndex = 0;
 const eliminatedPlayers = {};
 var numberOfEliminatedPlayers = 0;

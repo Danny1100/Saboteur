@@ -202,15 +202,53 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
 
         setActionChosenPlayer(data.chosenPlayer);
-        //set opponentAction and assassin's chosenPlayer (both on server and client) back to blank at the finish of assassin action
-        //reset playersPassedChallenge and playersWaiting when someone challenges, or opponent uses countess
+        //clearDrawAction at the finish of assassin action
+        //clearPlayersWaiting when someone challenges, or opponent uses countess
     });
 
     socket.on("assassinGuessActiveCard", (data) => {
-        const chosenPlayerId = findUserByUsername(data.chosenPlayer).id;
-        if(data.chosenCard === getPlayersActiveCards()[chosenPlayerId]) {
-            //discard activeCard, update and emit playerCards, activeCard, permanentCard, check if eliminated
-            console.log("correct");
+        const chosenPlayer = findUserByUsername(data.chosenPlayer);
+        
+        socket.emit("clearDrawStates");
+        io.in(data.password).emit("clearPlayersWaiting");
+
+        if(data.chosenCard === getPlayersActiveCards()[chosenPlayer.id]) {
+            discardCard(data.chosenCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+            removePlayerCard(chosenPlayer.id, data.chosenCard);
+            io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+            const currentPlayer = findUserById(socket.id);
+            if(getPlayerCards()[chosenPlayer.id].length === 0) {
+                setPlayerActiveCard(chosenPlayer.id, "");
+                io.to(chosenPlayer.id).emit("updateActiveCard", "");
+
+                const winner = eliminatePlayer(chosenPlayer.id);
+                if(winner) {
+                    io.in(data.password).emit("loseScreen", {winner: winner});
+                    io.to(winner.id).emit("winScreen");
+                } else {
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
+                        It is your turn.`}); 
+                };
+            } else {
+                setPlayerPermanentCard(chosenPlayer.id, "");
+                io.to(chosenPlayer.id).emit("updatePermanentCard", "");
+                setPlayerActiveCard(chosenPlayer.id, getPlayerCards()[chosenPlayer.id][0]);
+                io.to(chosenPlayer.id).emit("updateActiveCard", getPlayerCards()[chosenPlayer.id][0]);
+
+                nextPlayerIndex();
+                io.in(data.password).emit("notPlayerTurn", {history: 
+                    `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
+                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
+                    It is your turn.`});  
+            };
         } else {
             nextPlayerIndex();
             const currentPlayer = findUserById(socket.id);
