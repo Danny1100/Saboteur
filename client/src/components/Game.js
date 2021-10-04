@@ -423,6 +423,60 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "loseChallenge":
+                return (
+                    <div id="loseChallenge">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div style={{paddingTop: "10%"}}>
+                            <h2>You lost the challenge and have lost a card slot. Choose a card to discard.</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="loseChallenge"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in loseChallenge";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.loseChallenge}>Confirm</button>
+                    </div>
+                );
+
+            case "challengeWonDrawCard":
+                return (
+                    <div id="challengeWonDrawCard">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div className="myCards">
+                            <h2>You won the challenge. Choose a card to be your active card:</h2>
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.drawnCard} name="challengeWonDrawCard"></input>
+                                <label>{props.drawnCard}</label>
+                                <h3>Drawn card</h3>
+                            </span>
+                            <span style={{display: "inline-block", margin: "7%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.opponentAction} name="challengeWonDrawCard"></input>
+                                <label>{props.opponentAction}</label>
+                                <h3>Previous Card</h3>
+                            </span>
+                        </div>
+                        <button onClick={props.challengeWonDrawCard}>Confirm</button>
+                    </div>
+                );
+
 
             case "loseScreen":
                 return (

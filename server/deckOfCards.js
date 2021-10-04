@@ -9,7 +9,7 @@ const playerCards = {};
 const initialiseDeck = (numberOfPlayers) => {
     for(let i = 0; i < characterCards.length-1; i++) {
         for(let j = 0; j <= numberOfPlayers; j++) {
-            deck.push(characterCards[i]);
+            deck.push(characterCards[0]);
             remainingCards++;
         };
     };

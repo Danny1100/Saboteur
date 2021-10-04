@@ -214,6 +214,15 @@ function App() {
       setChallengePlayer(data.challengePlayer.username);
     });
 
+    socket.on("loseChallenge", () => {
+      setDisplayGameState("loseChallenge");
+    });
+
+    socket.on("challengeWonDrawCard", (data) => {
+      setDisplayGameState("challengeWonDrawCard");
+      setDrawnCard(data.drawnCard);
+    });
+
     socket.on("clearPlayersWaiting", () => {
       setPlayersWaiting(0);
     });
@@ -350,7 +359,11 @@ function App() {
   };
 
   const assassinConfirm = () => {
-    socket.emit("assassinChosePlayer", {password: password, chosenPlayer: chosenPlayer});
+    if(chosenPlayer === "") {
+      alert("Please choose a player to use Assassin on.");
+    } else {
+      socket.emit("assassinChosePlayer", {password: password, chosenPlayer: chosenPlayer});
+    }
   };
 
   const assassinGuessActiveCard = () => {
@@ -386,6 +399,14 @@ function App() {
 
   const challengeReveal = () => {
     socket.emit("challengeReveal", {password: password, chosenPlayer: chosenPlayer, challengePlayer:challengePlayer, chosenCard: chosenCard, opponentAction: opponentAction});
+  };
+
+  const loseChallenge = () => {
+    socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: opponentAction});
+  };
+
+  const challengeWonDrawCard = () => {
+    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: opponentAction});
   };
 
 
@@ -450,6 +471,8 @@ function App() {
         challengePass={challengePass}
         challengeAction={challengeAction}
         challengeReveal={challengeReveal}
+        loseChallenge={loseChallenge}
+        challengeWonDrawCard={challengeWonDrawCard}
         />
       )}
     </div>
