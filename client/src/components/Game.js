@@ -369,7 +369,7 @@ const Game = (props) => {
                         />
                         <div className="countessActions" style={{position: "fixed", left: "0", bottom: "0", width: "100%"}}>
                             <button style={{margin: "2%", marginRight: "15%"}} onClick={props.challengeAction}>Challenge</button>
-                            <button style={{margin: "2%", marginLeft: "10%", marginRight: "10%"}}>Countess</button>
+                            <button style={{margin: "2%", marginLeft: "10%", marginRight: "10%"}} onClick={props.countessAction}>Countess</button>
                             <button style={{margin: "2%", marginLeft: "15%"}} onClick={props.challengePass}>Pass</button>
                         </div>
                     </div>
@@ -423,6 +423,35 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "challengeCountessReveal":
+                return (
+                    <div id="challengeCountessReveal">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div style={{paddingTop: "10%"}}>
+                            <h2>{props.history}</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="challengeReveal"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in challengeCountessReveal";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.challengeCountessReveal}>Confirm</button>
+                    </div>
+                );
+
+
             case "loseChallenge":
                 return (
                     <div id="loseChallenge">
@@ -451,6 +480,34 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "loseCountessChallenge":
+                return (
+                    <div id="loseCountessChallenge">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div style={{paddingTop: "10%"}}>
+                            <h2>You lost the challenge and have lost a card slot. Choose a card to discard.</h2>
+                            {props.playerCards[props.id] && props.playerCards[props.id].map((card, index) => {
+                                if(card) {
+                                    return (
+                                        <span key={index} style={{margin: "3%"}} onChange={props.chooseCard}>
+                                            <input type="radio" value={card} name="loseCountessChallenge"></input>
+                                            <label>{card}</label>
+                                        </span>
+                                    );
+                                } else {
+                                    return "error in loseCountessChallenge";
+                                }
+                            })}
+                        </div>
+                        <button style={{margin: "3%"}} onClick={props.loseCountessChallenge}>Confirm</button>
+                    </div>
+                ); 
+
             case "challengeWonDrawCard":
                 return (
                     <div id="challengeWonDrawCard">
@@ -477,6 +534,31 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "challengeCountessWonDrawCard":
+                return (
+                    <div id="challengeCountessWonDrawCard">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div className="myCards">
+                            <h2>You won the challenge. Choose a card to be your active card:</h2>
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.drawnCard} name="challengeWonDrawCard"></input>
+                                <label>{props.drawnCard}</label>
+                                <h3>Drawn card</h3>
+                            </span>
+                            <span style={{display: "inline-block", margin: "7%"}} onChange={props.chooseCard}>
+                                <input type="radio" value="Countess" name="challengeWonDrawCard"></input>
+                                <label>Countess</label>
+                                <h3>Previous Card</h3>
+                            </span>
+                        </div>
+                        <button onClick={props.challengeCountessWonDrawCard}>Confirm</button>
+                    </div>
+                );
 
             case "loseScreen":
                 return (

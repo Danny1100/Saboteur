@@ -1,6 +1,7 @@
 const deck = [];
 const discardPile = {Assassin: 0, Countess: 0, Prophet: 0, Archmage: 0, Rogue: 0};
-const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
+// const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
+const characterCards = ["Assassin", "Countess", "Assassin", "Countess", "Assassin", "Assassin"];
 var remainingCards = 0;
 
 const playerCards = {};
@@ -9,7 +10,7 @@ const playerCards = {};
 const initialiseDeck = (numberOfPlayers) => {
     for(let i = 0; i < characterCards.length-1; i++) {
         for(let j = 0; j <= numberOfPlayers; j++) {
-            deck.push(characterCards[0]);
+            deck.push(characterCards[i]);
             remainingCards++;
         };
     };

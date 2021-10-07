@@ -202,8 +202,6 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
 
         setActionChosenPlayer(data.chosenPlayer);
-        //clearDrawAction, and clear opponent action for everyone at the finish of assassin action
-        //clearPlayersWaiting when someone challenges, or opponent uses countess
     });
 
     socket.on("assassinGuessActiveCard", (data) => {
@@ -262,6 +260,28 @@ io.on("connection", (socket) => {
         };
     });
 
+    socket.on("countessAction", (data) => {
+        io.in(data.password).emit("clearPlayersWaiting");
+        resetPlayersPassedChallenge();
+
+        const currentPlayer = getUsers()[getPlayerTurnIndex()];
+        for(let id in getEliminatedPlayers()) {
+            if(!getEliminatedPlayers()[id] && id !== socket.id) {
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), currentPlayer: currentPlayer, characterAction: "Countess"});
+            } else {
+                io.to(id).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${findUserById(socket.id).username}. 
+                    ${findUserById(socket.id).username} is using Countess to block assassination.
+                    Waiting to see if other players will challenge.`});
+            };
+        };
+
+        updatePlayersPassedChallenge(socket.id);
+        socket.emit("updateHistory", `${currentPlayer.username} used Assassin on you. 
+            You called Countess to block.
+            Waiting to see if other players will challenge.`)
+        socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+    });
+
     //listening for challenge actions
     socket.on("challengePass", (data) => {
         updatePlayersPassedChallenge(socket.id);
@@ -276,6 +296,22 @@ io.on("connection", (socket) => {
                     io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and was not challenged.
                         ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
                     io.to(currentPlayer.id).emit("assassinGuessActiveCard");
+                    break;
+
+                case "Countess":
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
+                    io.in(data.password).emit("clearPlayersWaiting");
+                    io.in(data.password).emit("clearOpponentAction");
+                    resetPlayersPassedChallenge();
+
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()}.
+                        ${getActionChosenPlayer()} called Countess to block the assassination and was not challenged.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()}.
+                        ${getActionChosenPlayer()} called Countess to block the assassination and was not challenged.
+                        It is your turn.`})
+
                     break;
 
                 case "Prophet":
@@ -310,14 +346,26 @@ io.on("connection", (socket) => {
     });
 
     socket.on("challengeAction", (data) => {
-        socket.emit("clearPlayersWaiting");
+        io.in(data.password).emit("clearPlayersWaiting");
         resetPlayersPassedChallenge();
 
         const currentPlayer = getUsers()[getPlayerTurnIndex()];
         const challengePlayer = findUserById(socket.id);
-        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${getActionChosenPlayer()} and was challenged by ${challengePlayer.username}.
-            ${currentPlayer.username} is now going to reveal a card.`})
-        io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer});
+        if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${getActionChosenPlayer()} and was challenged by ${challengePlayer.username}.
+                ${currentPlayer.username} is now going to reveal a card.`})
+            io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: data.opponentAction});
+        } else if (data.opponentAction === "Countess") {
+            const countessPlayer = findUserByUsername(getActionChosenPlayer());
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and ${getActionChosenPlayer()} called Countess.
+                ${getActionChosenPlayer()} was challenged and is now going to reveal a card.`});
+            io.to(countessPlayer.id).emit("updateHistory", `${currentPlayer.username} used Assassin on you and you called Countess. 
+                ${challengePlayer.username} challenged your Countess.
+                Choose a card to reveal:`)
+            io.to(countessPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: "Countess"});
+        } else {
+            //prophet or archmage
+        };
     });
 
     socket.on("challengeReveal", (data) => {
@@ -378,8 +426,32 @@ io.on("connection", (socket) => {
                     ${playerName} discarded ${data.chosenCard}.
                     It is your turn.`}); 
             };
+            setActionChosenPlayer("");
         };
     }); 
+
+    socket.on("challengeCountessReveal", (data) => {
+        if(data.chosenCard === "Countess") {
+            const currentPlayer = getUsers()[getPlayerTurnIndex()];
+            const countessPlayer = getActionChosenPlayer();
+            const challengePlayer = data.challengePlayer;
+
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${countessPlayer} and ${countessPlayer} called Countess.
+                ${challengePlayer} challenged ${countessPlayer}'s Countess and lost.
+                ${challengePlayer} is now choosing a card to discard.`});
+
+            io.to(findUserByUsername(challengePlayer).id).emit("loseCountessChallenge");
+        } else {
+            
+        };
+        //need to clear playersWaiting whenever someone challenges or whenever challenge has been passed:
+        // io.in(data.password).emit("clearPlayersWaiting");
+        // resetPlayersPassedChallenge();
+
+        //clearDrawAction for countess and assassin players, and clear opponent action for everyone at the finish of assassin action
+
+        //also clear getActionChosenPlayer() at the finish of the action
+    });
 
     socket.on("loseChallengeChoseCard", (data) => {
         discardCard(data.chosenCard);
@@ -387,6 +459,12 @@ io.on("connection", (socket) => {
 
         removePlayerCard(socket.id, data.chosenCard);
         io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+        let currentPlayer = getUsers()[getPlayerTurnIndex()];
+        if(data.opponentAction === "Countess") {
+            currentPlayer = findUserByUsername(getActionChosenPlayer());
+        }
+        const challengePlayer = findUserById(socket.id);
 
         if(getPlayerCards()[socket.id].length === 0) {
             setPlayerActiveCard(socket.id, "");
@@ -397,8 +475,6 @@ io.on("connection", (socket) => {
                 io.in(data.password).emit("loseScreen", {winner: winner});
                 io.to(winner.id).emit("winScreen");
             } else {
-                const currentPlayer = getUsers()[getPlayerTurnIndex()];
-                const challengePlayer = findUserById(socket.id);
                 io.in(data.password).emit("updateHistory", `${challengePlayer.username} challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
                     ${challengePlayer.username} discarded ${data.chosenCard}.
                     ${challengePlayer.username} was eliminated from the game.
@@ -408,7 +484,11 @@ io.on("connection", (socket) => {
                     You have been eliminated from the game.
                     ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`})
 
-                io.to(currentPlayer.id).emit("challengeWonDrawCard", {drawnCard: drawCard()});
+                if(data.opponentAction !== "Countess") {
+                    io.to(currentPlayer.id).emit("challengeWonDrawCard", {drawnCard: drawCard()});
+                } else {
+                    io.to(currentPlayer.id).emit("challengeCountessWonDrawCard", {drawnCard: drawCard()});
+                };
             };
         } else {
             setPlayerPermanentCard(socket.id, "");
@@ -416,8 +496,6 @@ io.on("connection", (socket) => {
             setPlayerActiveCard(socket.id, getPlayerCards()[socket.id][0]);
             socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
 
-            const currentPlayer = getUsers()[getPlayerTurnIndex()];
-            const challengePlayer = findUserById(socket.id);
             io.in(data.password).emit("updateHistory", `${challengePlayer.username} challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
                 ${challengePlayer.username} discarded ${data.chosenCard}.
                 ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`);
@@ -425,7 +503,11 @@ io.on("connection", (socket) => {
                 You discarded ${data.chosenCard}.
                 ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`})
 
-            io.to(currentPlayer.id).emit("challengeWonDrawCard", {drawnCard: drawCard()});
+            if(data.opponentAction !== "Countess") {
+                io.to(currentPlayer.id).emit("challengeWonDrawCard", {drawnCard: drawCard()});
+            } else {
+                io.to(currentPlayer.id).emit("challengeCountessWonDrawCard", {drawnCard: drawCard()});
+            };
         };            
     });
 
@@ -463,16 +545,35 @@ io.on("connection", (socket) => {
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                         `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} who challenged.
-                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game..
+                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game.
                         It is your turn.`});
-                        
+
                     socket.emit("clearDrawStates");
                     io.in(data.password).emit("clearOpponentAction");
                 } else {
-                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and won the challenge.
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had an Assassin and won the challenge.
                         ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
                     io.to(currentPlayer.id).emit("assassinGuessActiveCard");
                 };
+                break;
+
+            case "Countess":
+                socket.emit("clearDrawStates");
+                io.to(currentPlayer.id).emit("clearDrawStates");
+                io.in(data.password).emit("clearPlayersWaiting");
+                io.in(data.password).emit("clearOpponentAction");
+
+                nextPlayerIndex();
+                io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} who called Countess.
+                    ${getActionChosenPlayer()}'s Countess was challenged by ${data.challengePlayer}.
+                    ${getActionChosenPlayer()} revealed a Countess and won the challenge.
+                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                    `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} who called Countess.
+                    ${getActionChosenPlayer()}'s Countess was challenged by ${data.challengePlayer}.
+                    ${getActionChosenPlayer()} revealed a Countess and won the challenge.
+                    It is your turn.`});
                 break;
 
             case "Prophet":

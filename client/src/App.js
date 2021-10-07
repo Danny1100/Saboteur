@@ -195,7 +195,17 @@ function App() {
     //challenge actions
     socket.on("challengeAction", (data) => {
       setDisplayGameState("challengeAction");
-      setHistory(`${data.player.username} is using ${data.characterAction} on ${data.chosenPlayer}. Would you like to challenge this action?`);
+      if(data.characterAction === "Assassin" || data.characterAction === "Rogue") {
+        setHistory(`${data.player.username} is using ${data.characterAction} on ${data.chosenPlayer}. Would you like to challenge this action?`);
+        setOpponentAction(data.characterAction);
+      } else if(data.characterAction === "Countess") {
+        setHistory(`${data.currentPlayer.username} used Assassin on ${data.player.username}.
+          ${data.player.username} called Countess to block the assassination.
+          Would you like to challenge ${data.player.username}'s Countess?`)
+      } else {
+        console.log("Prophet or Archmage");
+      };
+
       setOpponentAction(data.characterAction);
     });
 
@@ -210,7 +220,13 @@ function App() {
     });
 
     socket.on("challengeReveal", (data) => {
-      setDisplayGameState("challengeReveal");
+      if(data.action === "Assassin" || data.action === "Rogue") {
+        setDisplayGameState("challengeReveal");
+      } else if(data.action === "Countess") {
+        setDisplayGameState("challengeCountessReveal");
+      } else {
+
+      }
       setChallengePlayer(data.challengePlayer.username);
     });
 
@@ -218,8 +234,17 @@ function App() {
       setDisplayGameState("loseChallenge");
     });
 
+    socket.on("loseCountessChallenge", () => {
+      setDisplayGameState("loseCountessChallenge");
+    });
+
     socket.on("challengeWonDrawCard", (data) => {
       setDisplayGameState("challengeWonDrawCard");
+      setDrawnCard(data.drawnCard);
+    });
+
+    socket.on("challengeCountessWonDrawCard", (data) => {
+      setDisplayGameState("challengeCountessWonDrawCard");
       setDrawnCard(data.drawnCard);
     });
 
@@ -376,6 +401,10 @@ function App() {
     }
   };
 
+  const countessAction = () => {
+    socket.emit("countessAction", {password: password});
+  };
+
   const prophetAction = () => {
 
   };
@@ -401,12 +430,24 @@ function App() {
     socket.emit("challengeReveal", {password: password, chosenPlayer: chosenPlayer, challengePlayer:challengePlayer, chosenCard: chosenCard, opponentAction: opponentAction});
   };
 
+  const challengeCountessReveal = () => {
+    socket.emit("challengeCountessReveal", {password: password, challengePlayer: challengePlayer, chosenCard: chosenCard});
+  };
+
   const loseChallenge = () => {
     socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: opponentAction});
   };
 
+  const loseCountessChallenge = () => {
+    socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: "Countess"});
+  };
+
   const challengeWonDrawCard = () => {
-    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: opponentAction});
+    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: opponentAction, challengePlayer: challengePlayer});
+  };
+
+  const challengeCountessWonDrawCard = () => {
+    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: "Countess", challengePlayer: challengePlayer});
   };
 
 
@@ -464,6 +505,7 @@ function App() {
         assassinAction={assassinAction}
         assassinConfirm={assassinConfirm}
         assassinGuessActiveCard={assassinGuessActiveCard}
+        countessAction={countessAction}
         prophetAction={prophetAction}
         archmageAction={archmageAction}
         rogueAction={rogueAction}
@@ -471,8 +513,11 @@ function App() {
         challengePass={challengePass}
         challengeAction={challengeAction}
         challengeReveal={challengeReveal}
+        challengeCountessReveal={challengeCountessReveal}
         loseChallenge={loseChallenge}
+        loseCountessChallenge={loseCountessChallenge}
         challengeWonDrawCard={challengeWonDrawCard}
+        challengeCountessWonDrawCard={challengeCountessWonDrawCard}
         />
       )}
     </div>
