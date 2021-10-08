@@ -431,24 +431,73 @@ io.on("connection", (socket) => {
     }); 
 
     socket.on("challengeCountessReveal", (data) => {
-        if(data.chosenCard === "Countess") {
-            const currentPlayer = getUsers()[getPlayerTurnIndex()];
-            const countessPlayer = getActionChosenPlayer();
-            const challengePlayer = data.challengePlayer;
+        const currentPlayer = getUsers()[getPlayerTurnIndex()];
+        const countessPlayer = getActionChosenPlayer();
+        const challengePlayer = data.challengePlayer;
 
+        if(data.chosenCard === "Countess") {
             io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${countessPlayer} and ${countessPlayer} called Countess.
                 ${challengePlayer} challenged ${countessPlayer}'s Countess and lost.
                 ${challengePlayer} is now choosing a card to discard.`});
 
             io.to(findUserByUsername(challengePlayer).id).emit("loseCountessChallenge");
         } else {
-            
+            discardCard(data.chosenCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+            removePlayerCard(socket.id, data.chosenCard);
+            io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+            if(getPlayerCards()[socket.id].length === 0) {
+                setPlayerActiveCard(socket.id, "");
+                socket.emit("updateActiveCard", "");
+
+                const winner = eliminatePlayer(socket.id);
+                if(winner) {
+                    io.in(data.password).emit("loseScreen", {winner: winner});
+                    io.to(winner.id).emit("winScreen");
+                } else {
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
+                        ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
+                        ${countessPlayer} has been eliminated from the game.
+                        ${countessPlayer} discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                        `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
+                        ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
+                        ${countessPlayer} has been eliminated from the game.
+                        ${countessPlayer} discarded ${data.chosenCard}.
+                        It is your turn.`});                 
+                };
+                socket.emit("clearDrawStates");
+                io.to(currentPlayer.id).emit("clearDrawStates");
+                io.in(data.password).emit("clearPlayersWaiting");
+                io.in(data.password).emit("clearOpponentAction");
+            } else {
+                setPlayerPermanentCard(socket.id, "");
+                socket.emit("updatePermanentCard", "");
+                setPlayerActiveCard(socket.id, getPlayerCards()[socket.id][0]);
+                socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
+
+                io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
+                    ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
+                    ${countessPlayer} discarded ${data.chosenCard}.
+                    ${currentPlayer.username} is now guessing ${countessPlayer}'s active card.`})
+
+                socket.emit("clearDrawStates");
+
+                io.to(currentPlayer.id).emit("assassinGuessActiveCard");
+            };
+
+            setActionChosenPlayer("");
         };
         //need to clear playersWaiting whenever someone challenges or whenever challenge has been passed:
         // io.in(data.password).emit("clearPlayersWaiting");
         // resetPlayersPassedChallenge();
 
-        //clearDrawAction for countess and assassin players, and clear opponent action for everyone at the finish of assassin action
+        //clearDrawAction for current player, and clear opponent action for everyone at the finish of action
 
         //also clear getActionChosenPlayer() at the finish of the action
     });
