@@ -19,6 +19,10 @@ const initialiseDeck = (numberOfPlayers) => {
     return deck;
 };
 
+const getDeck = () => {
+    return deck;
+};
+
 const shuffleDeck = () => {
     for(let i = deck.length-1; i > 0; i--) {
         const newIndex = Math.floor(Math.random() * (i+1));
@@ -90,4 +94,4 @@ const discardCard = (characterCard) => {
     discardPile[characterCard]++;
 };
 
-module.exports = { initialiseDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, getDiscardPile, discardCard };
+module.exports = { initialiseDeck, getDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, getDiscardPile, discardCard };

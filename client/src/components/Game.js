@@ -331,6 +331,20 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "prophetSeeCards":
+                return (
+                    <div id="prophetSeeCards">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <h2 style={{paddingTop: "2%", whiteSpace: "pre-line"}}>{props.history}</h2>
+                        <button style={{margin: "3%"}} onClick={props.prophetFinishSeeingCards}>Confirm</button>
+                    </div>
+                );
+
 
             case "challengeAction":
                 return (

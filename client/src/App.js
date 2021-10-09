@@ -192,18 +192,22 @@ function App() {
       setDisplayGameState("assassinGuessActiveCard");
     });
 
+    socket.on("prophetSeeCards", (data) => {
+      setHistory(data.history);
+      setDisplayGameState("prophetSeeCards");
+    });
+
     //challenge actions
     socket.on("challengeAction", (data) => {
       setDisplayGameState("challengeAction");
       if(data.characterAction === "Assassin" || data.characterAction === "Rogue") {
         setHistory(`${data.player.username} is using ${data.characterAction} on ${data.chosenPlayer}. Would you like to challenge this action?`);
-        setOpponentAction(data.characterAction);
       } else if(data.characterAction === "Countess") {
         setHistory(`${data.currentPlayer.username} used Assassin on ${data.player.username}.
           ${data.player.username} called Countess to block the assassination.
           Would you like to challenge ${data.player.username}'s Countess?`)
       } else {
-        console.log("Prophet or Archmage");
+        setHistory(`${data.player.username} is using ${data.characterAction}. Would you like to challenge this action?`);
       };
 
       setOpponentAction(data.characterAction);
@@ -406,7 +410,11 @@ function App() {
   };
 
   const prophetAction = () => {
+    socket.emit("prophetAction");
+  };
 
+  const prophetFinishSeeingCards = () => {
+    socket.emit("prophetFinishSeeingCards", {password: password});
   };
 
   const archmageAction = () => {
@@ -507,6 +515,7 @@ function App() {
         assassinGuessActiveCard={assassinGuessActiveCard}
         countessAction={countessAction}
         prophetAction={prophetAction}
+        prophetFinishSeeingCards={prophetFinishSeeingCards}
         archmageAction={archmageAction}
         rogueAction={rogueAction}
 

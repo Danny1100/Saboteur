@@ -4,7 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
 const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers } = require('./users');
-const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard } = require('./deckOfCards');
+const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard } = require('./playersCards');
 
 app.use(cors());
@@ -282,6 +282,29 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
     });
 
+    socket.on("prophetAction", () => {
+        for(let id in getEliminatedPlayers()) {
+            if(!getEliminatedPlayers()[id]) {
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), characterAction: "Prophet"});
+            } else {
+                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Prophet. Waiting to see if other players will challenge.`});
+            };
+        };
+
+        updatePlayersPassedChallenge(socket.id);
+        socket.emit("updateHistory", `You are using Prophet. Waiting to see if other players will challenge.`)
+        socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+    });
+
+    socket.on("prophetFinishSeeingCards", (data) => {
+        nextPlayerIndex();
+        const currentPlayer = findUserById(socket.id);
+        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and looked at the top two cards in the deck.
+            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Prophet and looked at the top two cards in the deck.
+        It is your turn.`});
+    });
+
     //listening for challenge actions
     socket.on("challengePass", (data) => {
         updatePlayersPassedChallenge(socket.id);
@@ -294,7 +317,7 @@ io.on("connection", (socket) => {
             switch (data.opponentAction) {
                 case "Assassin":
                     io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} and was not challenged.
-                        ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
+                        ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`});
                     io.to(currentPlayer.id).emit("assassinGuessActiveCard");
                     break;
 
@@ -315,8 +338,21 @@ io.on("connection", (socket) => {
                     break;
 
                 case "Prophet":
-                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                    console.log("Prophet");
+                    const deck = getDeck();
+                    if(getRemainingCards() !== 1) {
+                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was not challenged.
+                            ${currentPlayer.username} is now looking at the top two cards in the deck.`});
+
+                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged. 
+                            Top Card: ${deck[0]}
+                            Second Card: ${deck[1]}`});
+                    } else {
+                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was not challenged.
+                            ${currentPlayer.username} is now looking at the last card in the deck.`});
+
+                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged. There is only one card left in the deck. 
+                        Last Card: ${deck[0]}`});
+                    }
                     break;
 
                 case "Archmage":
