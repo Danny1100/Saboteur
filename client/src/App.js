@@ -224,13 +224,12 @@ function App() {
     });
 
     socket.on("challengeReveal", (data) => {
-      if(data.action === "Assassin" || data.action === "Rogue") {
+      if(data.action !== "Countess") {
         setDisplayGameState("challengeReveal");
-      } else if(data.action === "Countess") {
-        setDisplayGameState("challengeCountessReveal");
       } else {
+        setDisplayGameState("challengeCountessReveal");
+      };
 
-      }
       setChallengePlayer(data.challengePlayer.username);
     });
 

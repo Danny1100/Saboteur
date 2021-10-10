@@ -465,7 +465,6 @@ const Game = (props) => {
                     </div>
                 );
 
-
             case "loseChallenge":
                 return (
                     <div id="loseChallenge">

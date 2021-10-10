@@ -400,19 +400,31 @@ io.on("connection", (socket) => {
                 Choose a card to reveal:`)
             io.to(countessPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: "Countess"});
         } else {
-            //prophet or archmage
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} and was challenged by ${challengePlayer.username}.
+                ${currentPlayer.username} is now going to reveal a card.`})
+            io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: data.opponentAction});
         };
     });
 
     socket.on("challengeReveal", (data) => {
         if(data.opponentAction === data.chosenCard) {
             const currentPlayer = findUserById(socket.id);
-            io.in(data.password).emit("updateHistory", `${currentPlayer.username} used ${data.opponentAction} on ${data.chosenPlayer} and was challenged by ${data.challengePlayer}.
-                ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
-                ${data.challengePlayer} is choosing a card to discard.`);
-            io.to(socket.id).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${data.chosenPlayer} and was challenged by ${data.challengePlayer}.
-                ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
-                ${data.challengePlayer} is choosing a card to discard.`});
+            if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
+                io.in(data.password).emit("updateHistory", `${currentPlayer.username} used ${data.opponentAction} on ${data.chosenPlayer} and was challenged by ${data.challengePlayer}.
+                    ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
+                    ${data.challengePlayer} is choosing a card to discard.`);
+                io.to(socket.id).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${data.chosenPlayer} and was challenged by ${data.challengePlayer}.
+                    ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
+                    ${data.challengePlayer} is choosing a card to discard.`});
+            } else {
+                io.in(data.password).emit("updateHistory", `${currentPlayer.username} used ${data.opponentAction} and was challenged by ${data.challengePlayer}.
+                    ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
+                    ${data.challengePlayer} is choosing a card to discard.`);
+                io.to(socket.id).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} and was challenged by ${data.challengePlayer}.
+                    ${currentPlayer.username} was holding ${data.opponentAction} and won the challenge.
+                    ${data.challengePlayer} is choosing a card to discard.`});
+            };
+            
             io.to(findUserByUsername(data.challengePlayer).id).emit("loseChallenge");
         } else {
             socket.emit("clearDrawStates");
@@ -435,16 +447,29 @@ io.on("connection", (socket) => {
                     io.to(winner.id).emit("winScreen");
                 } else {
                     nextPlayerIndex();
-                    io.in(data.password).emit("notPlayerTurn", {history: 
-                        `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} has been eliminated from the game.
-                        ${playerName} discarded ${data.chosenCard}.
-                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                        `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} has been eliminated from the game.
-                        ${playerName} discarded ${data.chosenCard}.
-                        It is your turn.`});                 
+                    if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
+                        io.in(data.password).emit("notPlayerTurn", {history: 
+                            `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
+                            ${playerName} has been eliminated from the game.
+                            ${playerName} discarded ${data.chosenCard}.
+                            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                            `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
+                            ${playerName} has been eliminated from the game.
+                            ${playerName} discarded ${data.chosenCard}.
+                            It is your turn.`});
+                    } else {
+                        io.in(data.password).emit("notPlayerTurn", {history: 
+                            `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
+                            ${playerName} has been eliminated from the game.
+                            ${playerName} discarded ${data.chosenCard}.
+                            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                            `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
+                            ${playerName} has been eliminated from the game.
+                            ${playerName} discarded ${data.chosenCard}.
+                            It is your turn.`});
+                    };                 
                 };
             } else {
                 setPlayerPermanentCard(socket.id, "");
@@ -453,14 +478,25 @@ io.on("connection", (socket) => {
                 socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
 
                 nextPlayerIndex();
-                io.in(data.password).emit("notPlayerTurn", {history: 
-                    `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                    ${playerName} discarded ${data.chosenCard}.
-                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                    `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                    ${playerName} discarded ${data.chosenCard}.
-                    It is your turn.`}); 
+                if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
+                        ${playerName} discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                        `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
+                        ${playerName} discarded ${data.chosenCard}.
+                        It is your turn.`}); 
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
+                        ${playerName} discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                        `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
+                        ${playerName} discarded ${data.chosenCard}.
+                        It is your turn.`}); 
+                };
             };
             setActionChosenPlayer("");
         };
@@ -662,11 +698,26 @@ io.on("connection", (socket) => {
                 break;
 
             case "Prophet":
-                //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                console.log("Prophet");
-                //need to clear the below two after the action has been finished
-                // socket.emit("clearDrawStates");
-                // io.in(data.password).emit("clearOpponentAction");
+                const deck = getDeck();
+                if(getRemainingCards() !== 1) {
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had a Prophet and won the challenge.
+                        ${currentPlayer.username} is now looking at the top two cards in the deck.`});
+
+                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge. 
+                        Top Card: ${deck[0]}
+                        Second Card: ${deck[1]}`});
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had a Prophet and won the challenge.
+                        ${currentPlayer.username} is now looking at the last card in the deck.`});
+
+                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge. There is only one card left in the deck. 
+                    Last Card: ${deck[0]}`});
+                }
+
+                socket.emit("clearDrawStates");
+                io.in(data.password).emit("clearOpponentAction");
                 break;
 
             case "Archmage":
