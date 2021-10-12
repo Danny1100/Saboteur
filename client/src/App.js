@@ -197,6 +197,11 @@ function App() {
       setDisplayGameState("prophetSeeCards");
     });
 
+    socket.on("rogueSeeActiveCard", (data) => {
+      setHistory(data.history);
+      setDisplayGameState("rogueSeeActiveCard");
+    });
+
     //challenge actions
     socket.on("challengeAction", (data) => {
       setDisplayGameState("challengeAction");
@@ -421,7 +426,19 @@ function App() {
   };
 
   const rogueAction = () => {
+    setDisplayGameState("rogueChoosePlayer");
+  };
 
+  const rogueConfirm = () => {
+    if(chosenPlayer === "") {
+      alert("Please choose a player to use Rogue on.");
+    } else {
+      socket.emit("rogueChosePlayer", {password: password, chosenPlayer: chosenPlayer});
+    }
+  };
+
+  const rogueFinishSeeingCard = () => {
+    socket.emit("rogueFinishSeeingCard", {password: password, chosenPlayer: chosenPlayer});
   };
 
   //challenge functions
@@ -517,6 +534,8 @@ function App() {
         prophetFinishSeeingCards={prophetFinishSeeingCards}
         archmageAction={archmageAction}
         rogueAction={rogueAction}
+        rogueConfirm={rogueConfirm}
+        rogueFinishSeeingCard={rogueFinishSeeingCard}
 
         challengePass={challengePass}
         challengeAction={challengeAction}

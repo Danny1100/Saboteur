@@ -297,12 +297,47 @@ io.on("connection", (socket) => {
     });
 
     socket.on("prophetFinishSeeingCards", (data) => {
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
+        io.in(data.password).emit("clearPlayersWaiting");
+        io.in(data.password).emit("clearOpponentAction");
+        resetPlayersPassedChallenge();
+
         nextPlayerIndex();
         const currentPlayer = findUserById(socket.id);
         io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and looked at the top two cards in the deck.
             It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Prophet and looked at the top two cards in the deck.
-        It is your turn.`});
+            It is your turn.`});
+    });
+
+    socket.on("rogueChosePlayer", (data) => {
+        for(let id in getEliminatedPlayers()) {
+            if(!getEliminatedPlayers()[id]) {
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), chosenPlayer: data.chosenPlayer, characterAction: "Rogue"});
+            } else {
+                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Rogue on ${data.chosenPlayer}. Waiting to see if other players will challenge.`});
+            };
+        };
+
+        updatePlayersPassedChallenge(socket.id);
+        socket.emit("updateHistory", `You are using Rogue on ${data.chosenPlayer}. Waiting to see if other players will challenge.`)
+        socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+
+        setActionChosenPlayer(data.chosenPlayer);
+    });
+
+    socket.on("rogueFinishSeeingCard", (data) => {
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
+        io.in(data.password).emit("clearPlayersWaiting");
+        io.in(data.password).emit("clearOpponentAction");
+        resetPlayersPassedChallenge();
+
+        nextPlayerIndex();
+        const currentPlayer = findUserById(socket.id);
+        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue and looked at ${data.chosenPlayer}'s active card.
+            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Rogue and looked at ${data.chosenPlayer}'s active card.
+            It is your turn.`});
     });
 
     //listening for challenge actions
@@ -357,12 +392,19 @@ io.on("connection", (socket) => {
 
                 case "Archmage":
                     //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
+                    // Need to clear on challenge pass:
+                        // io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
+                        // io.in(data.password).emit("clearPlayersWaiting");
+                        // io.in(data.password).emit("clearOpponentAction");
+                        // resetPlayersPassedChallenge();
                     console.log("Archmage");
                     break;
 
                 case "Rogue":
-                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                    console.log("Rogue");
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was not challenged.
+                        ${currentPlayer.username} is now looking at ${getActionChosenPlayer()}'s active card.`});
+                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and weren't challenged.
+                        ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}`});
                     break;
 
                 default:
@@ -565,13 +607,6 @@ io.on("connection", (socket) => {
 
             setActionChosenPlayer("");
         };
-        //need to clear playersWaiting whenever someone challenges or whenever challenge has been passed:
-        // io.in(data.password).emit("clearPlayersWaiting");
-        // resetPlayersPassedChallenge();
-
-        //clearDrawAction for current player, and clear opponent action for everyone at the finish of action
-
-        //also clear getActionChosenPlayer() at the finish of the action
     });
 
     socket.on("loseChallengeChoseCard", (data) => {
@@ -653,7 +688,7 @@ io.on("connection", (socket) => {
             shuffleDeck();
             io.in(data.password).emit("updateRemainingCards", getRemainingCards());
         };
-        //continue with opponentAction CHECK IF ACTIONCHOSENPLAYER WAS ELIMINATED BY THE CHALLENGE
+        
         const currentPlayer = getUsers()[getPlayerTurnIndex()];
         switch (data.opponentAction) {
             case "Assassin":
@@ -729,11 +764,27 @@ io.on("connection", (socket) => {
                 break;
 
             case "Rogue":
-                //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                console.log("Rogue");
-                //need to clear the below two after the action has been finished
-                // socket.emit("clearDrawStates");
-                // io.in(data.password).emit("clearOpponentAction");
+                const chosenPlayer = findUserByUsername(getActionChosenPlayer());
+                if(getEliminatedPlayers()[chosenPlayer.id]) {
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} who challenged.
+                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                        `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} who challenged.
+                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game.
+                        It is your turn.`});
+
+                    socket.emit("clearDrawStates");
+                    io.in(data.password).emit("clearOpponentAction");
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had a Rogue and won the challenge.
+                        ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
+                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and won the challenge.
+                        ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}`});
+                };
                 break;
 
             default:

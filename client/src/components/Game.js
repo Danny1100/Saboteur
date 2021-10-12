@@ -345,6 +345,48 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "rogueChoosePlayer":
+                return (
+                    <div id="rogueChoosePlayer">
+                        <CardInfo
+                        discardPile={props.discardPile}
+                        remainingCards={props.remainingCards}
+                        users={props.users}
+                        playerCards={props.playerCards}
+                    />
+                    <h2 style={{paddingTop: "8%"}}>Choose a player to use Rogue on:</h2>
+                    <div>
+                        {props.users && props.users.map((user, index) => {
+                            if(user.id !== props.id && props.playerCards[user.id].length !== 0) {
+                                return (
+                                    <div key={index} style={{margin: "3%"}}>
+                                        <input type="radio" value={user.username} name="rogueChoosePlayer" onChange={props.choosePlayer}></input>
+                                        <label>{user.username}</label>                                            
+                                    </div>
+                                );
+                            } else {
+                                return "";
+                            };
+                        })}
+                    </div>
+                    <button onClick={props.rogueConfirm}>Confirm</button>
+                    </div>
+                );
+
+            case "rogueSeeActiveCard":
+                return (
+                    <div id="rogueSeeActiveCard">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <h2 style={{paddingTop: "2%", whiteSpace: "pre-line"}}>{props.history}</h2>
+                        <button style={{margin: "3%"}} onClick={props.rogueFinishSeeingCard}>Confirm</button>
+                    </div>
+                );
+
 
             case "challengeAction":
                 return (
