@@ -341,6 +341,22 @@ const Game = (props) => {
                             playerCards={props.playerCards}
                         />
                         <h2 style={{paddingTop: "2%", whiteSpace: "pre-line"}}>{props.history}</h2>
+                        <div className="myCards">
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}}>
+                                <h2>{props.topCard}</h2>
+                                <h3>Top Card</h3>
+                            </span>
+                            {
+                                props.secondCard ? (
+                                    <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}}>
+                                        <h2>{props.secondCard}</h2>
+                                        <h3>Second Card</h3>
+                                    </span>
+                                )
+                                :
+                                ""
+                            }
+                        </div>
                         <button style={{margin: "3%"}} onClick={props.prophetFinishSeeingCards}>Confirm</button>
                     </div>
                 );

@@ -198,6 +198,12 @@ function App() {
 
     socket.on("prophetSeeCards", (data) => {
       setHistory(data.history);
+      if(data.secondCard) {
+        setTopCard(data.topCard);
+        setSecondCard(data.secondCard);
+      } else {
+        setTopCard(data.topCard);
+      }
       setDisplayGameState("prophetSeeCards");
     });
 
@@ -390,6 +396,8 @@ function App() {
   const confirmNewCard = () => {
     if(chosenCard === "") {
       alert("Please choose a card to be your active card.");
+    } else if((drawnCard === "Saboteur"  || activeCard === "Saboteur") && chosenCard !== "Saboteur") {
+      alert("You cannot discard the Saboteur off of a draw action.");
     } else {
       socket.emit("confirmNewCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, activeCard: activeCard});
       setDrawnCard("");

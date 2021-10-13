@@ -419,15 +419,12 @@ io.on("connection", (socket) => {
                         io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was not challenged.
                             ${currentPlayer.username} is now looking at the top two cards in the deck.`});
 
-                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged. 
-                            Top Card: ${deck[0]}
-                            Second Card: ${deck[1]}`});
+                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged.`, topCard: deck[0], secondCard: deck[1]});
                     } else {
                         io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was not challenged.
                             ${currentPlayer.username} is now looking at the last card in the deck.`});
 
-                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged. There is only one card left in the deck. 
-                        Last Card: ${deck[0]}`});
+                        io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and were not challenged. There is only one card left in the deck.`, topCard: deck[0]});
                     }
                     break;
 
@@ -789,20 +786,14 @@ io.on("connection", (socket) => {
                         ${currentPlayer.username} had a Prophet and won the challenge.
                         ${currentPlayer.username} is now looking at the top two cards in the deck.`});
 
-                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge. 
-                        Top Card: ${deck[0]}
-                        Second Card: ${deck[1]}`});
+                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge.`, topCard: deck[0], secondCard: deck[1]});
                 } else {
                     io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Prophet and was challenged by ${data.challengePlayer}.
                         ${currentPlayer.username} had a Prophet and won the challenge.
                         ${currentPlayer.username} is now looking at the last card in the deck.`});
 
-                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge. There is only one card left in the deck. 
-                    Last Card: ${deck[0]}`});
+                    io.to(currentPlayer.id).emit("prophetSeeCards", {history: `You used Prophet and won the challenge. There is only one card left in the deck.`, topCard: deck[0]});
                 }
-
-                socket.emit("clearDrawStates");
-                io.in(data.password).emit("clearOpponentAction");
                 break;
 
             case "Archmage":
