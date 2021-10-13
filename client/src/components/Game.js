@@ -345,6 +345,38 @@ const Game = (props) => {
                     </div>
                 );
 
+            case "archmageDrawCards":
+                return (
+                    <div id="archmageDrawCards">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div className="myCards">
+                            <h2>Choose a card to be your active card:</h2>
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}} onChange={props.chooseCard}>
+                                <input type="radio" value={props.topCard} name="archmageChooseCard"></input>
+                                <label>{props.topCard}</label>
+                                <h3>Top card</h3>
+                            </span>
+                            {
+                                props.secondCard ? (
+                                    <span style={{display: "inline-block", margin: "7%"}} onChange={props.chooseCard}>
+                                        <input type="radio" value={props.secondCard} name="archmageChooseCard"></input>
+                                        <label>{props.secondCard}</label>
+                                        <h3>Second Card</h3>
+                                    </span>
+                                )
+                                :
+                                ""
+                            }
+                        </div>
+                        <button onClick={props.archmageChoseCard}>Confirm</button>
+                    </div>
+                );
+
             case "rogueChoosePlayer":
                 return (
                     <div id="rogueChoosePlayer">
@@ -383,6 +415,12 @@ const Game = (props) => {
                             playerCards={props.playerCards}
                         />
                         <h2 style={{paddingTop: "2%", whiteSpace: "pre-line"}}>{props.history}</h2>
+                        <div className="myCards">
+                            <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}}>
+                                <h2>{props.topCard}</h2>
+                                <h3>{`${props.chosenPlayer}'s Active Card`}</h3>
+                            </span>
+                        </div>
                         <button style={{margin: "3%"}} onClick={props.rogueFinishSeeingCard}>Confirm</button>
                     </div>
                 );

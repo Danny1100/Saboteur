@@ -81,6 +81,8 @@ function App() {
   const [drawnCard, setDrawnCard] = useState("");
   const [opponentAction, setOpponentAction] = useState("");
   const [challengePlayer, setChallengePlayer] = useState("");
+  const [topCard, setTopCard] = useState("");
+  const [secondCard, setSecondCard] = useState("");
 
   //states/variables for displaying different values on webpage
   const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
@@ -185,6 +187,8 @@ function App() {
       setChosenCard("");
       setDrawnCard("");
       setChallengePlayer("");
+      setTopCard("");
+      setSecondCard("");
     });
 
     //character Actions
@@ -197,8 +201,19 @@ function App() {
       setDisplayGameState("prophetSeeCards");
     });
 
+    socket.on("archmageDrawCards", (data) => {
+      if(data.secondCard) {
+        setTopCard(data.topCard);
+        setSecondCard(data.secondCard);
+      } else {
+        setTopCard(data.topCard);
+      };
+      setDisplayGameState("archmageDrawCards");
+    });
+
     socket.on("rogueSeeActiveCard", (data) => {
       setHistory(data.history);
+      setTopCard(data.topCard);
       setDisplayGameState("rogueSeeActiveCard");
     });
 
@@ -422,7 +437,11 @@ function App() {
   };
 
   const archmageAction = () => {
+    socket.emit("archmageAction");
+  };
 
+  const archmageChoseCard = () => {
+    socket.emit("archmageChoseCard", {password: password, chosenCard: chosenCard, activeCard: activeCard, topCard: topCard, secondCard: secondCard});
   };
 
   const rogueAction = () => {
@@ -501,6 +520,8 @@ function App() {
         chosenPlayer={chosenPlayer}
         drawnCard={drawnCard}
         opponentAction={opponentAction}
+        topCard={topCard}
+        secondCard={secondCard}
 
         characterCards={characterCards}
         confirmButtonMessage={confirmButtonMessage}
@@ -533,6 +554,7 @@ function App() {
         prophetAction={prophetAction}
         prophetFinishSeeingCards={prophetFinishSeeingCards}
         archmageAction={archmageAction}
+        archmageChoseCard={archmageChoseCard}
         rogueAction={rogueAction}
         rogueConfirm={rogueConfirm}
         rogueFinishSeeingCard={rogueFinishSeeingCard}

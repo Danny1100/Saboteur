@@ -310,6 +310,47 @@ io.on("connection", (socket) => {
             It is your turn.`});
     });
 
+    socket.on("archmageAction", () => {
+        for(let id in getEliminatedPlayers()) {
+            if(!getEliminatedPlayers()[id]) {
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), characterAction: "Archmage"});
+            } else {
+                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Archmage. Waiting to see if other players will challenge.`});
+            };
+        };
+
+        updatePlayersPassedChallenge(socket.id);
+        socket.emit("updateHistory", `You are using Archmage. Waiting to see if other players will challenge.`)
+        socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+    });
+
+    socket.on("archmageChoseCard", (data) => {
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
+        io.in(data.password).emit("clearPlayersWaiting");
+        io.in(data.password).emit("clearOpponentAction");
+
+        insertCard(data.activeCard);
+        if(data.chosenCard === data.topCard) {
+            insertCard(data.secondCard);
+        } else {
+            insertCard(data.topCard);
+        }
+        shuffleDeck();
+
+        updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
+        io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+        io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+        setPlayerActiveCard(socket.id, data.chosenCard);
+        socket.emit("updateActiveCard", data.chosenCard);
+
+        nextPlayerIndex();
+        const currentPlayer = findUserById(socket.id);
+        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and drew a new active card.
+            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Archmage and drew a new active card.
+            It is your turn.`});
+    });
+
     socket.on("rogueChosePlayer", (data) => {
         for(let id in getEliminatedPlayers()) {
             if(!getEliminatedPlayers()[id]) {
@@ -391,20 +432,29 @@ io.on("connection", (socket) => {
                     break;
 
                 case "Archmage":
-                    //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                    // Need to clear on challenge pass:
-                        // io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
-                        // io.in(data.password).emit("clearPlayersWaiting");
-                        // io.in(data.password).emit("clearOpponentAction");
-                        // resetPlayersPassedChallenge();
-                    console.log("Archmage");
+                    if(getRemainingCards() !== 1) {
+                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and was not challenged.
+                            ${currentPlayer.username} is looking at the top two cards in the deck and choosing one of them to be their active card.
+                            The unchosen card as well as ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+
+                        const topCard = drawCard();
+                        const secondCard = drawCard();
+                        io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard, secondCard: secondCard});
+                    } else {
+                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and was not challenged.
+                            ${currentPlayer.username} will replace their current active card with the last card in the deck.
+                            ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+
+                        const topCard = drawCard();
+                        io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard});
+                    }
                     break;
 
                 case "Rogue":
                     io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was not challenged.
                         ${currentPlayer.username} is now looking at ${getActionChosenPlayer()}'s active card.`});
-                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and weren't challenged.
-                        ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}`});
+                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and weren't challenged.`,
+                        topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]});
                     break;
 
                 default:
@@ -756,11 +806,22 @@ io.on("connection", (socket) => {
                 break;
 
             case "Archmage":
-                //server should keep track of opponent name for history msg and send nonPlayerTurn to all other players
-                console.log("Archmage");
-                //need to clear the below two after the action has been finished
-                // socket.emit("clearDrawStates");
-                // io.in(data.password).emit("clearOpponentAction");
+                if(getRemainingCards() !== 1) {
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and won the challenge.
+                        ${currentPlayer.username} is looking at the top two cards in the deck and choosing one of them to be their active card.
+                        The unchosen card as well as ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+
+                    const topCard = drawCard();
+                    const secondCard = drawCard();
+                    io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard, secondCard: secondCard});
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and won the challenge.
+                        ${currentPlayer.username} will replace their current active card with the last card in the deck.
+                        ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+
+                    const topCard = drawCard();
+                    io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard});
+                }
                 break;
 
             case "Rogue":
@@ -781,9 +842,9 @@ io.on("connection", (socket) => {
                 } else {
                     io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
                         ${currentPlayer.username} had a Rogue and won the challenge.
-                        ${currentPlayer.username} is now guessing ${getActionChosenPlayer()}'s active card.`})
-                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and won the challenge.
-                        ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}`});
+                        ${currentPlayer.username} is now looking at ${getActionChosenPlayer()}'s active card.`})
+                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and won the challenge.`,
+                        topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]});
                 };
                 break;
 
