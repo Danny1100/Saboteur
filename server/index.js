@@ -82,8 +82,14 @@ io.on("connection", (socket) => {
     });
 
     socket.on("executeFailedLoseCard", (data) => {
-        discardCard(data.chosenCard);
-        io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        if(data.chosenCard === "Saboteur") {
+            insertCard(data.chosenCard);
+            shuffleDeck();
+            io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+        } else {
+            discardCard(data.chosenCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        };
 
         removePlayerCard(socket.id, data.chosenCard);
         io.in(data.password).emit("updatePlayerCards", getPlayerCards());
@@ -101,11 +107,22 @@ io.on("connection", (socket) => {
                 io.to(winner.id).emit("winScreen");
             } else {
                 nextPlayerIndex();
-                io.in(data.password).emit("notPlayerTurn", {history: 
-                    `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
-                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
-                    It is your turn.`});                 
+
+                if(data.chosenCard === "Saboteur") {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${playerName} failed to execute and has been eliminated from the game. They shuffled ${data.chosenCard} back into the deck.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} failed to execute and has been eliminated from the game. 
+                        They shuffled ${data.chosenCard} back into the deck.
+                        It is your turn.`});
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
+                        It is your turn.`});
+                };
+                                 
             };
         }  else {
             setPlayerPermanentCard(socket.id, "");
@@ -114,18 +131,35 @@ io.on("connection", (socket) => {
             socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
 
             nextPlayerIndex();
-            io.in(data.password).emit("notPlayerTurn", {history: 
-                `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
-                It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
-                It is your turn.`});  
+
+            if(data.chosenCard === "Saboteur") {
+                io.in(data.password).emit("notPlayerTurn", {history: 
+                    `${playerName} has lost a card slot due to failed execute. They shuffled ${data.chosenCard} back into the deck.
+                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. 
+                    They shuffled ${data.chosenCard} back into the deck.
+                    It is your turn.`});  
+            } else {
+                io.in(data.password).emit("notPlayerTurn", {history: 
+                    `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
+                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
+                    It is your turn.`});  
+            };
+            
         };      
     });
 
     socket.on("executeSuccessLoseCard", (data) => {
-        discardCard(data.chosenCard);
-        io.in(data.password).emit("updateDiscardPile", getDiscardPile());
-
+        if(data.chosenCard === "Saboteur") {
+            insertCard(data.chosenCard);
+            shuffleDeck();
+            io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+        } else {
+            discardCard(data.chosenCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        };
+        
         removePlayerCard(socket.id, data.chosenCard);
         io.in(data.password).emit("updatePlayerCards", getPlayerCards());
 
@@ -135,8 +169,14 @@ io.on("connection", (socket) => {
         socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
 
         const playerName = findUserById(socket.id).username;
-        io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. They discarded ${data.chosenCard}. They now have the choice to draw a new card.`);
-
+        if(data.chosenCard === "Saboteur") {
+            io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. 
+                They shuffled ${data.chosenCard} back into the deck. 
+                They now have the choice to draw a new card.`);
+        } else {
+            io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. They discarded ${data.chosenCard}. They now have the choice to draw a new card.`);
+        };
+        
         socket.emit("executeSuccessChooseCardToDraw", {drawnCard: drawCard()});
     });
 
