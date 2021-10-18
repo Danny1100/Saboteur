@@ -252,8 +252,14 @@ io.on("connection", (socket) => {
         io.in(data.password).emit("clearOpponentAction");
 
         if(data.chosenCard === getPlayersActiveCards()[chosenPlayer.id]) {
-            discardCard(data.chosenCard);
-            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            if(data.chosenCard === "Saboteur") {
+                insertCard(data.chosenCard);
+                shuffleDeck();
+                io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+            } else {
+                discardCard(data.chosenCard);
+                io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            };
 
             removePlayerCard(chosenPlayer.id, data.chosenCard);
             io.in(data.password).emit("updatePlayerCards", getPlayerCards());
@@ -269,11 +275,22 @@ io.on("connection", (socket) => {
                     io.to(winner.id).emit("winScreen");
                 } else {
                     nextPlayerIndex();
-                    io.in(data.password).emit("notPlayerTurn", {history: 
-                        `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
-                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
-                        It is your turn.`}); 
+
+                    if(data.chosenCard === "Saboteur") {
+                        io.in(data.password).emit("notPlayerTurn", {history: 
+                            `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. 
+                            They shuffled ${data.chosenCard} back into the deck.
+                            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. 
+                            They shuffled ${data.chosenCard} back into the deck.
+                            It is your turn.`}); 
+                    } else {
+                        io.in(data.password).emit("notPlayerTurn", {history: 
+                            `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
+                            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
+                            It is your turn.`}); 
+                    };
                 };
             } else {
                 setPlayerPermanentCard(chosenPlayer.id, "");
@@ -282,11 +299,22 @@ io.on("connection", (socket) => {
                 io.to(chosenPlayer.id).emit("updateActiveCard", getPlayerCards()[chosenPlayer.id][0]);
 
                 nextPlayerIndex();
-                io.in(data.password).emit("notPlayerTurn", {history: 
-                    `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
-                    It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-                io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
-                    It is your turn.`});  
+
+                if(data.chosenCard === "Saboteur") {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. 
+                        They shuffled ${data.chosenCard} back into the deck.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. 
+                        They shuffled ${data.chosenCard} back into the deck.
+                        It is your turn.`});
+                } else {
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
+                        It is your turn.`});
+                };
             };
         } else {
             nextPlayerIndex();
