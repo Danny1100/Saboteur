@@ -587,13 +587,22 @@ io.on("connection", (socket) => {
             socket.emit("clearDrawStates");
             io.in(data.password).emit("clearOpponentAction");
 
-            discardCard(data.chosenCard);
-            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            const playerName = findUserById(socket.id).username;
+            let discardedMessage = `${playerName} discarded ${data.chosenCard}.`
+            if(data.chosenCard === "Saboteur") {
+                insertCard(data.chosenCard);
+                shuffleDeck();
+                io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+
+                discardedMessage = `${playerName} shuffled ${data.chosenCard} back into the deck.`
+            } else {
+                discardCard(data.chosenCard);
+                io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            };
 
             removePlayerCard(socket.id, data.chosenCard);
             io.in(data.password).emit("updatePlayerCards", getPlayerCards());
 
-            const playerName = findUserById(socket.id).username;
             if(getPlayerCards()[socket.id].length === 0) {
                 setPlayerActiveCard(socket.id, "");
                 socket.emit("updateActiveCard", "");
@@ -608,23 +617,23 @@ io.on("connection", (socket) => {
                         io.in(data.password).emit("notPlayerTurn", {history: 
                             `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
                             ${playerName} has been eliminated from the game.
-                            ${playerName} discarded ${data.chosenCard}.
+                            ${discardedMessage}
                             It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                             `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
                             ${playerName} has been eliminated from the game.
-                            ${playerName} discarded ${data.chosenCard}.
+                            ${discardedMessage}
                             It is your turn.`});
                     } else {
                         io.in(data.password).emit("notPlayerTurn", {history: 
                             `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
                             ${playerName} has been eliminated from the game.
-                            ${playerName} discarded ${data.chosenCard}.
+                            ${discardedMessage}
                             It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                             `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
                             ${playerName} has been eliminated from the game.
-                            ${playerName} discarded ${data.chosenCard}.
+                            ${discardedMessage}
                             It is your turn.`});
                     };                 
                 };
@@ -638,20 +647,20 @@ io.on("connection", (socket) => {
                 if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
                     io.in(data.password).emit("notPlayerTurn", {history: 
                         `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                         `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is your turn.`}); 
                 } else {
                     io.in(data.password).emit("notPlayerTurn", {history: 
                         `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                         `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
-                        ${playerName} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is your turn.`}); 
                 };
             };
@@ -671,8 +680,17 @@ io.on("connection", (socket) => {
 
             io.to(findUserByUsername(challengePlayer).id).emit("loseCountessChallenge");
         } else {
-            discardCard(data.chosenCard);
-            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            let discardedMessage = `${countessPlayer} discarded ${data.chosenCard}.`
+            if(data.chosenCard === "Saboteur") {
+                insertCard(data.chosenCard);
+                shuffleDeck();
+                io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+
+                discardedMessage = `${countessPlayer} shuffled ${data.chosenCard} back into the deck.`
+            } else {
+                discardCard(data.chosenCard);
+                io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            };
 
             removePlayerCard(socket.id, data.chosenCard);
             io.in(data.password).emit("updatePlayerCards", getPlayerCards());
@@ -691,13 +709,13 @@ io.on("connection", (socket) => {
                         `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
                         ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
                         ${countessPlayer} has been eliminated from the game.
-                        ${countessPlayer} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                         `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
                         ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
                         ${countessPlayer} has been eliminated from the game.
-                        ${countessPlayer} discarded ${data.chosenCard}.
+                        ${discardedMessage}
                         It is your turn.`});                 
                 };
                 socket.emit("clearDrawStates");
@@ -712,7 +730,7 @@ io.on("connection", (socket) => {
 
                 io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
                     ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
-                    ${countessPlayer} discarded ${data.chosenCard}.
+                    ${discardedMessage}
                     ${currentPlayer.username} is now guessing ${countessPlayer}'s active card.`})
 
                 socket.emit("clearDrawStates");
@@ -725,8 +743,20 @@ io.on("connection", (socket) => {
     });
 
     socket.on("loseChallengeChoseCard", (data) => {
-        discardCard(data.chosenCard);
-        io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        const challengePlayer = findUserById(socket.id);
+        let discardedMessage = `${challengePlayer.username} discarded ${data.chosenCard}.`
+        let playerDiscardMessage = `You discarded ${data.chosenCard}.`
+        if(data.chosenCard === "Saboteur") {
+            insertCard(data.chosenCard);
+            shuffleDeck();
+            io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+
+            discardedMessage = `${challengePlayer.username} shuffled ${data.chosenCard} back into the deck.`
+            playerDiscardMessage = `You shuffled ${data.chosenCard} back into the deck.`
+        } else {
+            discardCard(data.chosenCard);
+            io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+        };
 
         removePlayerCard(socket.id, data.chosenCard);
         io.in(data.password).emit("updatePlayerCards", getPlayerCards());
@@ -735,7 +765,6 @@ io.on("connection", (socket) => {
         if(data.opponentAction === "Countess") {
             currentPlayer = findUserByUsername(getActionChosenPlayer());
         }
-        const challengePlayer = findUserById(socket.id);
 
         if(getPlayerCards()[socket.id].length === 0) {
             setPlayerActiveCard(socket.id, "");
@@ -747,11 +776,11 @@ io.on("connection", (socket) => {
                 io.to(winner.id).emit("winScreen");
             } else {
                 io.in(data.password).emit("updateHistory", `${challengePlayer.username} challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
-                    ${challengePlayer.username} discarded ${data.chosenCard}.
+                    ${discardedMessage}
                     ${challengePlayer.username} was eliminated from the game.
                     ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`);
                 socket.emit("notPlayerTurn", {history: `You challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
-                    You discarded ${data.chosenCard}.
+                    ${playerDiscardMessage}
                     You have been eliminated from the game.
                     ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`})
 
@@ -768,10 +797,10 @@ io.on("connection", (socket) => {
             socket.emit("updateActiveCard", getPlayerCards()[socket.id][0]);
 
             io.in(data.password).emit("updateHistory", `${challengePlayer.username} challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
-                ${challengePlayer.username} discarded ${data.chosenCard}.
+                ${discardedMessage}
                 ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`);
             socket.emit("notPlayerTurn", {history: `You challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
-                You discarded ${data.chosenCard}.
+                ${playerDiscardMessage}
                 ${currentPlayer.username} now has the choice to replace their ${data.opponentAction} with a new card.`})
 
             if(data.opponentAction !== "Countess") {
