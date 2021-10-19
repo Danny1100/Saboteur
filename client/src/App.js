@@ -409,6 +409,8 @@ function App() {
   const assassinAction = () => {
     if(permanentCard === "Countess" || activeCard === "Countess") {
       alert("You cannot use Assassin if you hold a Countess");
+    } else if( (permanentCard === "Saboteur" && activeCard === "Assassin") || (activeCard === "Saboteur" && permanentCard === "Assassin") ) {
+      alert("You cannot use Assassin since you hold a Saboteur");
     } else {
       setDisplayGameState("assassinChoosePlayer");
     }
@@ -433,11 +435,19 @@ function App() {
   };
 
   const countessAction = () => {
-    socket.emit("countessAction", {password: password});
+    if( (permanentCard === "Saboteur" && activeCard === "Countess") || (activeCard === "Saboteur" && permanentCard === "Countess") ) {
+      alert("You cannot use Countess since you hold a Saboteur");
+    } else {
+      socket.emit("countessAction", {password: password});
+    };
   };
 
   const prophetAction = () => {
-    socket.emit("prophetAction");
+    if( (permanentCard === "Saboteur" && activeCard === "Prophet") || (activeCard === "Saboteur" && permanentCard === "Prophet") ) {
+      alert("You cannot use Prophet since you hold a Saboteur");
+    } else {
+      socket.emit("prophetAction");
+    };
   };
 
   const prophetFinishSeeingCards = () => {
@@ -445,7 +455,11 @@ function App() {
   };
 
   const archmageAction = () => {
-    socket.emit("archmageAction");
+    if( (permanentCard === "Saboteur" && activeCard === "Archmage") || (activeCard === "Saboteur" && permanentCard === "Archmage") ) {
+      alert("You cannot use Archmage since you hold a Saboteur");
+    } else {
+      socket.emit("archmageAction");
+    };
   };
 
   const archmageChoseCard = () => {
@@ -453,7 +467,11 @@ function App() {
   };
 
   const rogueAction = () => {
-    setDisplayGameState("rogueChoosePlayer");
+    if( (permanentCard === "Saboteur" && activeCard === "Rogue") || (activeCard === "Saboteur" && permanentCard === "Rogue") ) {
+      alert("You cannot use Rogue since you hold a Saboteur");
+    } else {
+      setDisplayGameState("rogueChoosePlayer");
+    };
   };
 
   const rogueConfirm = () => {
