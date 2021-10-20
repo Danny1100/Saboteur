@@ -3,9 +3,9 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers } = require('./users');
-const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck } = require('./deckOfCards');
-const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard } = require('./playersCards');
+const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers, initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain, resetUsersGameStates } = require('./users');
+const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck, findWinner, resetDeckOfCards } = require('./deckOfCards');
+const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard, resetPlayersCards } = require('./playersCards');
 
 app.use(cors());
 
@@ -38,6 +38,7 @@ io.on("connection", (socket) => {
         initialisePlayerCards(getUsers());
         initialiseEliminatedPlayers();
         initialisePlayersPassedChallenge();
+        initialiseUsersPlayAgain();
         io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
     });
 
@@ -221,8 +222,14 @@ io.on("connection", (socket) => {
             setPlayerActiveCard(socket.id, data.chosenCard);
             socket.emit("updateActiveCard", data.chosenCard);
         };
-        
-        socket.emit("chooseCharacterAction");
+
+        if(getRemainingCards() === 0) {
+            const winner = findUserById(findWinner());
+            io.in(data.password).emit("loseScreen", {winner: winner});
+            io.to(winner.id).emit("winScreen");
+        } else {
+            socket.emit("chooseCharacterAction");
+        }
     });
 
     //listening for character actions
@@ -941,6 +948,33 @@ io.on("connection", (socket) => {
         };
 
         setActionChosenPlayer("");
+    });
+
+    //listening for players who want to play again
+    socket.on("playAgain", (data) => {
+        setUsersPlayAgain(socket.id);
+        if(getNumberOfUsersPlayAgain() === getNumberOfPlayers()) {
+            resetPlayersCards();
+            resetDeckOfCards();
+            resetUsersGameStates();
+
+            io.in(data.password).emit("clearGameStates");
+
+            initialiseDeck(getNumberOfPlayers());
+            shuffleDeck();
+            initialisePlayerCards(getUsers());
+            initialiseEliminatedPlayers();
+            initialisePlayersPassedChallenge();
+            initialiseUsersPlayAgain();
+
+            io.in(data.password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
+        } else {
+            for(let id in getUsersPlayAgain()) {
+                if(getUsersPlayAgain()[id]) {
+                    io.to(id).emit("updatePlayAgainButton", {message: `Waiting on ${getNumberOfPlayers()-getNumberOfUsersPlayAgain()} players`})
+                }
+            }
+        };
     });
 
     //listening for client disconnect

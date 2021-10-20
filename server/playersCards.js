@@ -25,4 +25,14 @@ const setPlayerActiveCard = (id, data) => {
     playersActiveCards[id] = data;
 };
 
-module.exports = { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard };
+const resetPlayersCards = () => {
+    for(let id in playersActiveCards) {
+        delete playersActiveCards[id];
+    }
+    for(let id in playersPermanentCards) {
+        delete playersPermanentCards[id];
+    }
+};
+
+
+module.exports = { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard, resetPlayersCards };

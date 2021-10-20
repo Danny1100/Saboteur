@@ -673,7 +673,7 @@ const Game = (props) => {
                 return (
                     <div id="loseScreen">
                         <h2>{props.history}</h2>
-                        <button>Play Again</button>
+                        <button id="playAgainButton" onClick={props.playAgain}>{props.playAgainButton}</button>
                     </div>
                 );
 
@@ -681,7 +681,7 @@ const Game = (props) => {
                 return (
                     <div id="winScreen">
                         <h2>Congratulations! You won!</h2>
-                        <button>Play Again</button>
+                        <button id="playAgainButton" onClick={props.playAgain}>{props.playAgainButton}</button>
                     </div>
                 );
 

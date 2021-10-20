@@ -1,14 +1,14 @@
 const deck = [];
 const discardPile = {Assassin: 0, Countess: 0, Prophet: 0, Archmage: 0, Rogue: 0};
-// const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
-const characterCards = ["Prophet", "Countess", "Countess", "Saboteur", "Saboteur", "Saboteur"];
+const characterCards = ["Assassin", "Countess", "Prophet", "Archmage", "Rogue", "Saboteur"];
 var remainingCards = 0;
 
 const playerCards = {};
 
 //deck functions
+// characterCards.length-1
 const initialiseDeck = (numberOfPlayers) => {
-    for(let i = 0; i < characterCards.length-1; i++) {
+    for(let i = 0; i < 2; i++) {
         for(let j = 0; j <= numberOfPlayers; j++) {
             deck.push(characterCards[i]);
             remainingCards++;
@@ -85,6 +85,16 @@ const removePlayerCard = (id, card) => {
     return playerCards;
 };
 
+const findWinner = () => {
+    for(let id in playerCards) {
+        for(let card of playerCards[id]) {
+            if(card === "Saboteur") {
+                return id;
+            }
+        }
+    }
+};
+
 
 //discard pile functions
 const getDiscardPile = () => {
@@ -95,4 +105,18 @@ const discardCard = (characterCard) => {
     discardPile[characterCard]++;
 };
 
-module.exports = { initialiseDeck, getDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, getDiscardPile, discardCard };
+
+//reset function
+const resetDeckOfCards = () => {
+    for(let character in discardPile) {
+        discardPile[character] = 0;
+    };
+
+    remainingCards = 0;
+
+    for(let id in playerCards) {
+        playerCards[id] = [];
+    };
+};
+
+module.exports = { initialiseDeck, getDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, findWinner, getDiscardPile, discardCard, resetDeckOfCards };

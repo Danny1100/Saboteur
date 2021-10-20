@@ -90,6 +90,7 @@ function App() {
   const [history, setHistory] = useState("");
   const [displayGameState, setDisplayGameState] = useState("selectPermanentCard");
   const [playersWaiting, setPlayersWaiting] = useState(0);
+  const [playAgainButton, setPlayAgainButton] = useState("Play Again");
 
   //listens for game updates
   useEffect(() => {
@@ -291,8 +292,37 @@ function App() {
       setHistory(`${data.winner.username} won. Better luck next time!`)
     });
 
-    socket.on("winScreen", (data) => {
+    socket.on("winScreen", () => {
       setDisplayGameState("winScreen");
+    });
+
+    socket.on("updatePlayAgainButton", (data) => {
+      setPlayAgainButton(data.message);
+    });
+
+    socket.on("clearGameStates", () => {
+      setShowGame(false);
+      setPlayerCards({});
+      setRemainingCards(0);
+      setDiscardPile({});
+      setPermanentCard("");
+      setActiveCard("");
+
+      setChosenPlayer("");
+      setChosenCard("");
+      setChosenPermanentCard("");
+      setChosenActiveCard("");
+      setDrawnCard("");
+      setOpponentAction("");
+      setChallengePlayer("");
+      setTopCard("");
+      setSecondCard("");
+
+      setConfirmButtonMessage("Confirm");
+      setHistory("");
+      setDisplayGameState("selectPermanentCard");
+      setPlayersWaiting(0);
+      setPlayAgainButton("Play Again")
     });
   }, []);
 
@@ -519,6 +549,12 @@ function App() {
     socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: "Countess", challengePlayer: challengePlayer});
   };
 
+  //function to play again
+  const playAgain = () => {
+    socket.emit("playAgain", {password: password});
+    document.getElementById("playAgainButton").disabled = 'disabled';
+  };
+
 
 
   
@@ -555,6 +591,7 @@ function App() {
         displayGameState={displayGameState}
         playersWaiting={playersWaiting}
         challengePlayer={challengePlayer}
+        playAgainButton={playAgainButton}
 
         selectPermanentCard={selectPermanentCard}
         submitPermanentCard={submitPermanentCard}
@@ -593,6 +630,8 @@ function App() {
         loseCountessChallenge={loseCountessChallenge}
         challengeWonDrawCard={challengeWonDrawCard}
         challengeCountessWonDrawCard={challengeCountessWonDrawCard}
+
+        playAgain = {playAgain}
         />
       )}
     </div>

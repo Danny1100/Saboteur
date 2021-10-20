@@ -6,6 +6,8 @@ const eliminatedPlayers = {};
 var numberOfEliminatedPlayers = 0;
 const playersPassedChallenge = {};
 var actionChosenPlayer = "";
+const usersPlayAgain = {};
+var numberOfUsersPlayAgain = 0;
 
 
 //user functions
@@ -172,9 +174,56 @@ const setActionChosenPlayer = (username) => {
     return actionChosenPlayer;
 };
 
+//functions for checking and updating how many users want to start another game
+const initialiseUsersPlayAgain = () => {
+    users.map((user) => {
+        usersPlayAgain[user.id] = false;
+    });
+    return usersPlayAgain;
+};
+
+const getUsersPlayAgain = () => {
+    return usersPlayAgain;
+};
+
+const setUsersPlayAgain = (id) => {
+    usersPlayAgain[id] = true;
+    numberOfUsersPlayAgain++;
+    return usersPlayAgain;
+};
+
+const getNumberOfUsersPlayAgain = () => {
+    return numberOfUsersPlayAgain;
+};
+
+//reset function
+const resetUsersGameStates = () => {
+    playerTurnIndex = 0;
+
+    for(let id in eliminatedPlayers) {
+        eliminatedPlayers[id] = false;
+    };
+    numberOfEliminatedPlayers = 0;
+
+    resetPlayersPassedChallenge();
+
+    actionChosenPlayer = "";
+
+    for(let id in usersPlayAgain) {
+        usersPlayAgain[id] = false;
+    };
+    numberOfUsersPlayAgain = 0;
+
+
+    console.log(`number of eliminated players: ${numberOfEliminatedPlayers}`);
+};
+
+
 module.exports = { 
     addUser, findUserById, findUserByUsername, getUsers, removeUser, 
     getNumberOfPlayers, 
     getPlayerTurnIndex, initialiseEliminatedPlayers, getEliminatedPlayers, nextPlayerIndex, eliminatePlayer, 
     initialisePlayersPassedChallenge, getPlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, resetPlayersPassedChallenge,
-    getActionChosenPlayer, setActionChosenPlayer };
+    getActionChosenPlayer, setActionChosenPlayer,
+    initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain,
+    resetUsersGameStates };
