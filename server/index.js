@@ -18,7 +18,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         // origin: "http://localhost:3000"
-        origin: "https://61714298e70df8c1f125e3c7--ecstatic-boyd-abc2f3.netlify.app"
+        origin: "https://ecstatic-boyd-abc2f3.netlify.app"
     }
 });
 
