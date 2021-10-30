@@ -3,9 +3,13 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers, initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain, resetUsersGameStates } = require('./users');
+const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers, initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain, resetUsersGameStates, initialiseNumberOfWins, getNumberOfWins, incrementWins } = require('./users');
 const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck, findWinner, resetDeckOfCards } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard, resetPlayersCards } = require('./playersCards');
+
+const PORT = process.env.PORT || 3001;
+
+const router = require('./router');
 
 app.use(cors());
 
@@ -13,9 +17,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000"
+        // origin: "http://localhost:3000"
+        origin: "https://61714298e70df8c1f125e3c7--ecstatic-boyd-abc2f3.netlify.app"
     }
 });
+
+app.use(router);
 
 io.on("connection", (socket) => {
     //listening for initial game setup
@@ -39,7 +46,8 @@ io.on("connection", (socket) => {
         initialiseEliminatedPlayers();
         initialisePlayersPassedChallenge();
         initialiseUsersPlayAgain();
-        io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
+        initialiseNumberOfWins();
+        io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile(), numberOfWins: getNumberOfWins()});
     });
 
     socket.on("submitPermanentCard", (data) => {
@@ -104,6 +112,8 @@ io.on("connection", (socket) => {
 
             const winner = eliminatePlayer(socket.id);
             if(winner) {
+                incrementWins(winner.id);
+                io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                 io.in(data.password).emit("loseScreen", {winner: winner});
                 io.to(winner.id).emit("winScreen");
             } else {
@@ -225,6 +235,8 @@ io.on("connection", (socket) => {
 
         if(getRemainingCards() === 0) {
             const winner = findUserById(findWinner());
+            incrementWins(winner.id);
+            io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
             io.in(data.password).emit("loseScreen", {winner: winner});
             io.to(winner.id).emit("winScreen");
         } else {
@@ -278,6 +290,8 @@ io.on("connection", (socket) => {
 
                 const winner = eliminatePlayer(chosenPlayer.id);
                 if(winner) {
+                    incrementWins(winner.id);
+                    io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
                 } else {
@@ -405,11 +419,13 @@ io.on("connection", (socket) => {
         io.in(data.password).emit("clearOpponentAction");
 
         insertCard(data.activeCard);
-        if(data.chosenCard === data.topCard) {
-            insertCard(data.secondCard);
-        } else {
-            insertCard(data.topCard);
-        }
+        if(data.secondCard) {
+            if(data.chosenCard === data.topCard) {
+                insertCard(data.secondCard);
+            } else {
+                insertCard(data.topCard);
+            };
+        };
         shuffleDeck();
 
         updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
@@ -554,6 +570,8 @@ io.on("connection", (socket) => {
         if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
             io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${getActionChosenPlayer()} and was challenged by ${challengePlayer.username}.
                 ${currentPlayer.username} is now going to reveal a card.`})
+            io.to(currentPlayer.id).emit("updateHistory", `You used ${data.opponentAction} on ${getActionChosenPlayer()} and ${challengePlayer.username} challenged you.
+                Choose a card to reveal.`);
             io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: data.opponentAction});
         } else if (data.opponentAction === "Countess") {
             const countessPlayer = findUserByUsername(getActionChosenPlayer());
@@ -566,6 +584,8 @@ io.on("connection", (socket) => {
         } else {
             io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} and was challenged by ${challengePlayer.username}.
                 ${currentPlayer.username} is now going to reveal a card.`})
+            io.to(currentPlayer.id).emit("updateHistory", `You used ${data.opponentAction} and ${challengePlayer.username} challenged you.
+                Choose a card to reveal.`);
             io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: data.opponentAction});
         };
     });
@@ -616,6 +636,8 @@ io.on("connection", (socket) => {
 
                 const winner = eliminatePlayer(socket.id);
                 if(winner) {
+                    incrementWins(winner.id);
+                    io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
                 } else {
@@ -708,6 +730,8 @@ io.on("connection", (socket) => {
 
                 const winner = eliminatePlayer(socket.id);
                 if(winner) {
+                    incrementWins(winner.id);
+                    io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
                 } else {
@@ -779,6 +803,8 @@ io.on("connection", (socket) => {
 
             const winner = eliminatePlayer(socket.id);
             if(winner) {
+                incrementWins(winner.id);
+                io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                 io.in(data.password).emit("loseScreen", {winner: winner});
                 io.to(winner.id).emit("winScreen");
             } else {
@@ -985,6 +1011,6 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3001, () => {
-    console.log("LISTENING ON PORT 3001");
+server.listen(PORT, () => {
+    console.log(`LISTENING ON PORT ${PORT}`);
 });

@@ -13,9 +13,11 @@ function App() {
   const [users, setUsers] = useState([]);
   const [numberOfPlayers, setNumberOfPlayers] = useState(0);
 
+
   //initialise socket on startup and cleanup once finished
   useEffect(() => {
-    socket = io.connect("http://localhost:3001");
+    // socket = io.connect("http://localhost:3001");
+    socket = io.connect("https://saboteur-game.herokuapp.com/");
 
     //cleanup on component unmount
     return function cleanup() {
@@ -72,6 +74,7 @@ function App() {
   const [discardPile, setDiscardPile] = useState({});
   const [permanentCard, setPermanentCard] = useState("");
   const [activeCard, setActiveCard] = useState("");
+  const [numberOfWins, setNumberOfWins] = useState({});
 
   //temporary states for the execute and draw card actions
   const [chosenPlayer, setChosenPlayer] = useState("");
@@ -100,6 +103,7 @@ function App() {
       setPlayerCards(data.playerCards);
       setRemainingCards(data.remainingCards);
       setDiscardPile(data.discardPile);
+      setNumberOfWins(data.numberOfWins);
     });
 
     //general update functions
@@ -130,6 +134,9 @@ function App() {
     socket.on("updatePlayersWaiting", (data) => {
       setPlayersWaiting(data);
     });
+    socket.on("updateNumberOfWins", (data) => {
+      setNumberOfWins(data);
+    })
 
     //choosing permanent card at start of game
     socket.on("waitingOnPlayerSubmitPermanentCard", (data) => {
@@ -343,6 +350,8 @@ function App() {
     } else {
       socket.emit("submitPermanentCard", {permanentCard: permanentCard, activeCard: activeCard, password: password});
       document.getElementById("confirmPermanentCardButton").disabled = 'disabled';
+      document.getElementById("chosenPermanentCard0").disabled = true;
+      document.getElementById("chosenPermanentCard1").disabled = true;
     };
   };
 
@@ -493,7 +502,11 @@ function App() {
   };
 
   const archmageChoseCard = () => {
-    socket.emit("archmageChoseCard", {password: password, chosenCard: chosenCard, activeCard: activeCard, topCard: topCard, secondCard: secondCard});
+    if(chosenCard === "") {
+      alert("Please choose a card to be your new active card");
+    } else {
+      socket.emit("archmageChoseCard", {password: password, chosenCard: chosenCard, activeCard: activeCard, topCard: topCard, secondCard: secondCard});
+    }
   };
 
   const rogueAction = () => {
@@ -526,27 +539,53 @@ function App() {
   };
 
   const challengeReveal = () => {
-    socket.emit("challengeReveal", {password: password, chosenPlayer: chosenPlayer, challengePlayer:challengePlayer, chosenCard: chosenCard, opponentAction: opponentAction});
+    if(chosenCard === "") {
+      alert("Choose a card to reveal");
+    } else {
+      socket.emit("challengeReveal", {password: password, chosenPlayer: chosenPlayer, challengePlayer:challengePlayer, chosenCard: chosenCard, opponentAction: opponentAction});
+      setChosenCard("");
+    }
   };
 
   const challengeCountessReveal = () => {
-    socket.emit("challengeCountessReveal", {password: password, challengePlayer: challengePlayer, chosenCard: chosenCard});
+    if(chosenCard === "") {
+      alert("Choose a card to reveal");
+    } else {
+      socket.emit("challengeCountessReveal", {password: password, challengePlayer: challengePlayer, chosenCard: chosenCard});
+      setChosenCard("");
+    }
   };
 
   const loseChallenge = () => {
-    socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: opponentAction});
+    if(chosenCard === "") {
+      alert("Choose a card to discard");
+    } else {
+      socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: opponentAction});
+    }
   };
 
   const loseCountessChallenge = () => {
-    socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: "Countess"});
+    if(chosenCard === "") {
+      alert("Choose a card to discard");
+    } else {
+      socket.emit("loseChallengeChoseCard", {password: password, chosenCard: chosenCard, opponentAction: "Countess"});
+    }
   };
 
   const challengeWonDrawCard = () => {
-    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: opponentAction, challengePlayer: challengePlayer});
+    if(chosenCard === "") {
+      alert("Choose a card to keep as your active card");
+    } else {
+      socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: opponentAction, challengePlayer: challengePlayer});
+    }
   };
 
   const challengeCountessWonDrawCard = () => {
-    socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: "Countess", challengePlayer: challengePlayer});
+    if(chosenCard === "") {
+      alert("Choose a card to keep as your active card");
+    } else {
+      socket.emit("challengeWonDrawCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, opponentAction: "Countess", challengePlayer: challengePlayer});
+    }
   };
 
   //function to play again
@@ -579,6 +618,7 @@ function App() {
         discardPile={discardPile}
         permanentCard={permanentCard}
         activeCard={activeCard}
+        numberOfWins={numberOfWins}
         chosenPlayer={chosenPlayer}
         drawnCard={drawnCard}
         opponentAction={opponentAction}

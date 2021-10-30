@@ -6,9 +6,8 @@ var remainingCards = 0;
 const playerCards = {};
 
 //deck functions
-// characterCards.length-1
 const initialiseDeck = (numberOfPlayers) => {
-    for(let i = 0; i < 2; i++) {
+    for(let i = 0; i < characterCards.length-1; i++) {
         for(let j = 0; j <= numberOfPlayers; j++) {
             deck.push(characterCards[i]);
             remainingCards++;

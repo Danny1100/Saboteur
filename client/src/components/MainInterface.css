@@ -1,0 +1,27 @@
+.history {
+    font-size: 110%;
+    white-space: pre-line;
+}
+
+.myCards {
+    padding-top: 1%;
+    margin: 0.5%;
+}
+
+.activeCard {
+    display: inline-block;
+    margin-right: 3%;
+}
+
+.activeCard img {
+    width: 70%;
+}
+
+.permanentCard {
+    display: inline-block;
+    margin-left: 3%;
+}
+
+.permanentCard img {
+    width: 70%;
+}

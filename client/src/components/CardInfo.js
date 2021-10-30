@@ -1,23 +1,25 @@
 import React from 'react';
 
+import './CardInfo.css';
+
 const CardInfo = (props) => {
     return (
-        <div style={{paddingLeft: "0.5%", paddingRight: "0.5%", borderStyle: "solid"}}>
-            <span className="discardPile" style={{float: "left", display: "inline-block"}}>
+        <div id="cardInfo">
+            <span className="discardPile">
                 <h3>Discarded Cards:</h3>
                 {props.discardPile && Object.keys(props.discardPile).map((characterCard, index) => {
-                    return <p key={index} style={{margin: "0.2%", textAlign: "left"}}>{`${characterCard}:${props.discardPile[characterCard]}`}</p>
+                    return <p key={index}>{`${characterCard}: ${props.discardPile[characterCard]}`}</p>
                 })}
             </span>
 
-            <span className="remainingCardSlots" style={{display: "inline-block"}}>
+            <span className="remainingCardSlots">
                 <h3>Remaining Card Slots:</h3>
                 {props.users && props.users.map((user, index) => {
                     return <p key={index}>{`${user.username}: ${props.playerCards[user.id].length}`}</p>
                 })}
             </span>
 
-            <span className="remainingCards" style={{float: "right", display: "inline-block"}}>
+            <span className="remainingCards">
                 <h3>Remaining Cards:</h3>
                 <h3>{props.remainingCards}</h3>
             </span>

@@ -1,0 +1,33 @@
+#cardInfo {
+    margin: 1%;
+    padding-left: 1%;
+    padding-right: 1%;
+    padding-bottom: 0.5%;
+    border-style: solid;
+    border-radius: 20px;
+    border-color: rgb(97, 97, 97);
+    overflow: hidden;
+}
+
+.discardPile {
+    float: left;
+}
+
+.discardPile p {
+    margin: 0.5%;
+    text-align: center;
+}
+
+.remainingCardSlots p {
+    margin: 1.5%;
+    text-align: center;
+}
+
+.remainingCardSlots {
+    display: inline-block;
+}
+
+.remainingCards {
+    float: right;
+}
+

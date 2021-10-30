@@ -1,19 +1,33 @@
 import React from 'react';
+import './MainInterface.css'
+import lostCard from '../assets/Lost Card.png';
 
 const MainInterface = (props) => {
     return (
-        <div>
-            <div className="history" style={{paddingTop: "2%", whiteSpace: "pre-line"}}>{props.history}</div>
-
+        <div id="mainInterface">
+            <div className="history">{props.history}</div>
             <div className="myCards">
-                <span style={{display: "inline-block", margin: "7%", paddingTop: "15%"}}>
-                    <h2>{props.activeCard}</h2>
-                    <h3>Active Card</h3>
+                {props.activeCard ? 
+                <span className="activeCard">
+                    <img src={props.activeCard} alt="Active Card"/>
+                    <h2>Active Card</h2>
                 </span>
-                <span style={{display: "inline-block", margin: "7%"}}>
-                    <h2>{props.permanentCard}</h2>
-                    <h3>Permanent Card</h3>
+                :
+                <span className="activeCard">
+                    <img src={lostCard} alt="Active Card"/>
+                    <h2>Active Card</h2>
+                </span>}
+
+                {props.permanentCard ?
+                <span className="permanentCard">
+                    <img src={props.permanentCard} alt="Permanent Card"/>
+                    <h2>Permanent Card</h2>
                 </span>
+                :
+                <span className="permanentCard">
+                    <img src={lostCard} alt="Permanent Card"/>
+                    <h2>Permanent Card</h2>
+                </span>}
             </div>
         </div>        
     );

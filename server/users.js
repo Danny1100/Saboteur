@@ -1,6 +1,6 @@
 const users = [];
 const globalPassword = "svge";
-const numberOfPlayers = 3;
+const numberOfPlayers = 5;
 var playerTurnIndex = 0;
 const eliminatedPlayers = {};
 var numberOfEliminatedPlayers = 0;
@@ -8,6 +8,7 @@ const playersPassedChallenge = {};
 var actionChosenPlayer = "";
 const usersPlayAgain = {};
 var numberOfUsersPlayAgain = 0;
+const numberOfWins = {};
 
 
 //user functions
@@ -196,6 +197,23 @@ const getNumberOfUsersPlayAgain = () => {
     return numberOfUsersPlayAgain;
 };
 
+//add to number of wins
+const initialiseNumberOfWins = () => {
+    for(let user of users) {
+        numberOfWins[user.id] = 0;
+    };
+    return playersPassedChallenge;
+}
+
+const getNumberOfWins = () => {
+    return numberOfWins;
+}
+
+const incrementWins = (id) => {
+    numberOfWins[id]++;
+    return numberOfWins;
+}
+
 //reset function
 const resetUsersGameStates = () => {
     playerTurnIndex = 0;
@@ -226,4 +244,5 @@ module.exports = {
     initialisePlayersPassedChallenge, getPlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, resetPlayersPassedChallenge,
     getActionChosenPlayer, setActionChosenPlayer,
     initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain,
+    initialiseNumberOfWins, getNumberOfWins, incrementWins, 
     resetUsersGameStates };
