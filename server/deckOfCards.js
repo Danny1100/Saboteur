@@ -111,7 +111,8 @@ const resetDeckOfCards = () => {
         discardPile[character] = 0;
     };
 
-    remainingCards = 0;
+    deck.splice(0, deck.length);
+    remainingCards = deck.length;
 
     for(let id in playerCards) {
         playerCards[id] = [];

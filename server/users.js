@@ -231,9 +231,6 @@ const resetUsersGameStates = () => {
         usersPlayAgain[id] = false;
     };
     numberOfUsersPlayAgain = 0;
-
-
-    console.log(`number of eliminated players: ${numberOfEliminatedPlayers}`);
 };
 
 
