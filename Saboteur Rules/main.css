@@ -1,0 +1,95 @@
+html {
+    background-color: rgb(30,30,30);
+}
+
+h1 {
+    font-size: 2.25rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+
+.container {
+    font-family: 'Trebuchet MS', Helvetica, sans-serif;
+    text-align: center;
+    color: white;
+}
+
+.rules {
+    position: relative;
+    margin-top: 2%;
+    margin-left: 20%;
+    margin-right: 20%;
+    border: 0.25rem solid rgb(168, 168, 168);
+    border-radius: 20px;
+    background-color: rgb(35, 35, 35);
+}
+
+.rules h2 {
+    font-size: 1.5rem;
+}
+
+.rules p {
+    padding: 0px 5% 2% 5%;
+    font-size: 120%;
+}
+
+.cards {
+    margin: auto;
+    margin-top: 5%;
+    margin-bottom: 16%;
+    border: 0.25rem solid rgb(168, 168, 168);
+    border-radius: 20px;
+    background-color: rgb(35, 35, 35);
+    width: 80%;
+}
+
+.cards h3 {
+    font-size: 170%;
+}
+
+.cardGroup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-bottom: 2%;
+}
+
+.individualCard {
+    padding: 0.5%;
+    height: auto;
+    margin: 1%;
+}
+
+.cards img {
+    width: 80%;
+}
+
+.cards p {
+    text-align: center;
+    padding-right: 5%;
+    padding-left: 5%;
+}
+
+.bottomBar {
+    position: fixed;
+    padding-top: 1%;
+    padding-bottom: 1%;
+    width: 100%;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(40, 40, 40);
+}
+
+.bottomBar button {
+    font-size: 250%;
+    font-family: 'Calibri', Helvetica, sans-serif;;
+    color: rgb(235, 221, 221);
+    padding: 0.5% 5%;
+    background-color: rgb(199, 39, 39);
+    border-radius: 25px;
+}
+
+

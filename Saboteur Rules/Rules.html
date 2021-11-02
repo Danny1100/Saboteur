@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Saboteur Rules</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="main.css">
+    </head>
+    <div class="container">
+        <body>
+            <h1>Saboteur Rules</h1>
+            <hr>
+            <div class="rules">
+                <h2>Gameplay</h2>
+                <p>
+                    Each player has an active card slot and a permanent card slot. At the start of the game, each player draws two cards from the deck and 
+                    chooses which card will be their permanent card and which card will be their active card. The game then commences with players each taking their turn
+                    until there is a winner. You win the game by holding the Saboteur when the deck is exhausted, or if you are the last player standing
+                    (meaning all other players have lost both their card slots).
+                </p>
+
+                <h2>Player Turn</h2>
+                <p>
+                    On your turn, you can choose to either draw or execute.
+                    <br><br>
+                    If you execute, you choose a player to execute. If you can guess their permanent card and their active card, the executed player loses a card slot,
+                    and discards a card of their choice. They are then allowed to replace their remaining card with a new card from the deck. 
+                    The unchosen card is shuffled back into the deck. 
+                    However, if the person who used execute guesses the other person's cards incorrectly, that player loses a card slot instead and discards a card of their choice.
+                    <br><br>
+                    If you draw instead of execute, you draw a card from the deck and can choose to replace your active card with the drawn card. The unchosen card is discarded.
+                    You can then use a card action. Note you can use any card action, not just of the cards you hold. However, your card action can be challenged.
+                </p>
+
+
+                <h2>Challenging</h2>
+                <p>
+                    Whenever a player uses a card action, any other player can challenge if they do not believe the player holds that card. If a player challenges a card action,
+                    The person who used that action must reveal a card. 
+                    <br><br>
+                    If they reveal the respective card of the card action they used, the challenger loses a card slot and chooses a card to discard. The player who revealed a
+                    card then has the choice to replace their new card with a card from the deck, and the unchosen card is shuffled back into the deck. The card action that 
+                    was challenged is then performed as normal.
+                    <br><br>
+                    However, if the player is unable to show they hold the card of the action they used, they lose a card slot instead.
+                    They discard the card they revealed.
+                    The card action they used is cancelled.
+                </p>
+
+                <h2>Losing Card Slots</h2>
+                <p>
+                    Each player starts with two card slots. If you lose both card slots you are eliminated from the game. If you lose a card slot, 
+                    no matter which card you chose to discard your remaining card slot will be your active card slot, and you will not have a permanent card slot.
+                </p>
+
+                <h2>Technicalities</h2>
+                <p>
+                    <i>Saboteur Mechanics:</i> Note that as soon as the last card is drawn from the deck, the person holding the Saboteur is declared the winner.
+                    Also note that you cannot discard the Saboteur by drawing, however, if you lose a card slot, you can choose to discard the Saboteur, 
+                    and it is shuffled into the deck instead.
+                    <br><br>
+                    <i>Double Kills:</i>
+                    Note it is possible to lose both your card slots at once. For example, if player 1 uses Assassin on player 2, and player 2 challenges,
+                    if player 2 loses the challenge, they lose a card slot and player 1's Assassin goes through. If Player 1 then successfully asssassinates player 2,
+                    player 2 will have lost both card slots.
+
+                    Similarly, if player 1 uses Assassin on player 2 and player 2 calls Countess, if player 1 challenges the Countess and player 2 does not have it,
+                    player 2 loses a card from the challange. Then if player 1's successfully assassinates player 2, player 2 will have lost both card slots.
+                    <br><br>
+                    <i>Changing Permanent Card:</i>
+                    Note that there is only one way to change your permanent card during the game. If you win a challenge and revealed your permanent card, you are given 
+                    the choice to replace that card. Otherwise, it is not possible to change your permanent card.
+                    <br><br>
+                    <i>Collaboration:</i>
+                    Players should not collborate with each other throughout the course of the game.
+                </p>
+            </div>
+
+            <div class="cards">
+                <h2>Cards</h2>
+                <div class="cardGroup">
+                    <div class="individualCard">
+                        <h3 style="color:rgb(201, 24, 24)">Saboteur</h3>
+                        <img src="./assets/Saboteur Card.png" alt="Saboteur">
+                    </div>
+
+                    <div class="individualCard">
+                        <h3 style="color:rgb(57, 192, 39)">Assassin</h3>
+                        <img src="./assets/Assassin Card.png" alt="Assassin">
+                    </div>
+
+                    <div class="individualCard">
+                        <h3 style="color:rgb(169, 56, 184)">Countess</h3>
+                        <img src="./assets/Countess Card.png" alt="Countess">
+                    </div>
+
+                    <div class="individualCard">
+                        <h3 style="color:rgb(61, 109, 212)">Archmage</h3>
+                        <img src="./assets/Archmage Card.png" alt="Archmage">
+                    </div>
+                        
+                    <div class="individualCard">
+                        <h3 style="color:rgb(139, 139, 139)">Rogue</h3>
+                        <img src="./assets/Rogue Card.png" alt="Rogue">
+                    </div>
+
+                    <div class="individualCard">
+                        <h3 style="color:rgb(238, 238, 238)">Prophet</h3>
+                        <img src="./assets/Prophet Card.png" alt="Prophet">
+                    </div>
+                </div>
+            </div>
+        </body>
+    </div>
+</html>
