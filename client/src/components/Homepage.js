@@ -26,6 +26,7 @@ const Homepage = (props) => {
             <h3>{props.numberOfPlayers === 0 ? "" : "Players"}</h3>
             <div>{props.users.map((user) => {return <p key={user.username}>{user.username}</p>})}</div>
             <br></br>
+            <a href='https://inspiring-mccarthy-f87e02.netlify.app' target="_blank" rel="noopener noreferrer">Click here to read the rules</a>
             <div className="bottomBar">
                 <button className="blueButton" onClick={props.startGame}>Start Game</button>
             </div>

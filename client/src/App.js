@@ -16,8 +16,8 @@ function App() {
 
   //initialise socket on startup and cleanup once finished
   useEffect(() => {
-    // socket = io.connect("http://localhost:3001");
-    socket = io.connect("https://saboteur-game.herokuapp.com/");
+    socket = io.connect("http://localhost:3001");
+    // socket = io.connect("https://saboteur-game.herokuapp.com/");
 
     //cleanup on component unmount
     return function cleanup() {
