@@ -119,4 +119,17 @@ const resetDeckOfCards = () => {
     };
 };
 
-module.exports = { initialiseDeck, getDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, findWinner, getDiscardPile, discardCard, resetDeckOfCards };
+const fullResetDeckOfCards = () => {
+    for(let character in discardPile) {
+        discardPile[character] = 0;
+    };
+
+    deck.splice(0, deck.length);
+    remainingCards = deck.length;
+
+    for(let id in playerCards) {
+        delete playerCards[id];
+    };
+};
+
+module.exports = { initialiseDeck, getDeck, shuffleDeck, insertCard, drawCard, getRemainingCards, initialisePlayerCards, getPlayerCards, updatePlayerCard, removePlayerCard, findWinner, getDiscardPile, discardCard, resetDeckOfCards, fullResetDeckOfCards };

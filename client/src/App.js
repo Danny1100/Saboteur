@@ -16,8 +16,8 @@ function App() {
 
   //initialise socket on startup and cleanup once finished
   useEffect(() => {
-    socket = io.connect("http://localhost:3001");
-    // socket = io.connect("https://saboteur-game.herokuapp.com/");
+    // socket = io.connect("http://localhost:3001");
+    socket = io.connect("https://saboteur-game.herokuapp.com/");
 
     //cleanup on component unmount
     return function cleanup() {
@@ -42,6 +42,39 @@ function App() {
     socket.on("playerLeft", (users) => {
       setUsers(users);
     });
+
+    socket.on("clientReset", () => {
+      setUsername('');
+      setPassword('');
+      setUsers([]);
+      setNumberOfPlayers(0);
+
+      setShowGame(false);
+      setPlayerCards({});
+      setRemainingCards(0);
+      setDiscardPile({});
+      setPermanentCard("");
+      setActiveCard("");
+      setNumberOfWins({});
+
+      setChosenPlayer("");
+      setChosenCard("");
+      setChosenPermanentCard("");
+      setChosenActiveCard("");
+      setDrawnCard("");
+      setOpponentAction("");
+      setChallengePlayer("");
+      setTopCard("");
+      setSecondCard("");
+
+      setConfirmButtonMessage("Confirm");
+      setHistory("");
+      setDisplayGameState("selectPermanentCard");
+      setPlayersWaiting(0);
+      setPlayAgainButton("Play again");
+      
+      alert("Another player has disconnected");
+    });
   }, []);
 
   //Function to join a room
@@ -55,8 +88,8 @@ function App() {
 
   //Function to start the game
   const startGame = () => {
-    if(users.length !== numberOfPlayers) {
-      alert(`Need ${numberOfPlayers} players. This lobby currently only has ${users.length}.`);
+    if(users.length === 1) {
+      alert(`Need at least 2 players.`);
     } else if(numberOfPlayers === 0) {
       alert("You need to join a room to start a game");
     } else {

@@ -3,8 +3,8 @@ const app = express();
 const http = require('http');
 const cors = require('cors');
 const { Server } = require("socket.io");
-const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers, initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain, resetUsersGameStates, initialiseNumberOfWins, getNumberOfWins, incrementWins } = require('./users');
-const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck, findWinner, resetDeckOfCards } = require('./deckOfCards');
+const { addUser, findUserById, findUserByUsername, getUsers, removeUser, getNumberOfPlayers, getPlayerTurnIndex, initialiseEliminatedPlayers, nextPlayerIndex, eliminatePlayer, initialisePlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, getPlayersPassedChallenge, resetPlayersPassedChallenge, setActionChosenPlayer, getActionChosenPlayer, getEliminatedPlayers, initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain, resetUsersGameStates, initialiseNumberOfWins, getNumberOfWins, incrementWins, setGameStarted, fullResetUsers } = require('./users');
+const { initialiseDeck, shuffleDeck, initialisePlayerCards, getPlayerCards, getRemainingCards, getDiscardPile, discardCard, removePlayerCard, drawCard, updatePlayerCard, insertCard, getDeck, findWinner, resetDeckOfCards, fullResetDeckOfCards } = require('./deckOfCards');
 const { initialisePlayersPermanentCards, initialisePlayersActiveCards, getPlayersPermanentCards, getPlayersActiveCards, setPlayerPermanentCard, setPlayerActiveCard, resetPlayersCards } = require('./playersCards');
 
 const PORT = process.env.PORT || 3001;
@@ -17,8 +17,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000"
-        // origin: "https://ecstatic-boyd-abc2f3.netlify.app"
+        // origin: "http://localhost:3000"
+        origin: "https://ecstatic-boyd-abc2f3.netlify.app"
     }
 });
 
@@ -40,6 +40,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("startGame", (password) => {
+        setGameStarted(true);
+
         initialiseDeck(getNumberOfPlayers());
         shuffleDeck();
         initialisePlayerCards(getUsers());
@@ -649,8 +651,7 @@ io.on("connection", (socket) => {
                             ${discardedMessage}
                             It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                            `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. 
-                            ${playerName} has been eliminated from the game.
+                            `${playerName} used ${data.opponentAction} on ${data.chosenPlayer} but was challenged by ${data.challengePlayer} and lost. ${playerName} has been eliminated from the game.
                             ${discardedMessage}
                             It is your turn.`});
                     } else {
@@ -660,8 +661,7 @@ io.on("connection", (socket) => {
                             ${discardedMessage}
                             It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                            `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. 
-                            ${playerName} has been eliminated from the game.
+                            `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. ${playerName} has been eliminated from the game.
                             ${discardedMessage}
                             It is your turn.`});
                     };                 
@@ -743,10 +743,8 @@ io.on("connection", (socket) => {
                         ${discardedMessage}
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                        `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess.
-                        ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
-                        ${countessPlayer} has been eliminated from the game.
-                        ${discardedMessage}
+                        `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess. ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
+                        ${countessPlayer} has been eliminated from the game. ${discardedMessage}
                         It is your turn.`});                 
                 };
                 socket.emit("clearDrawStates");
@@ -903,8 +901,7 @@ io.on("connection", (socket) => {
                     ${getActionChosenPlayer()} revealed a Countess and won the challenge.
                     It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                 io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
-                    `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} who called Countess.
-                    ${getActionChosenPlayer()}'s Countess was challenged by ${data.challengePlayer}.
+                    `${currentPlayer.username} used Assassin on ${getActionChosenPlayer()} who called Countess. ${getActionChosenPlayer()}'s Countess was challenged by ${data.challengePlayer}.
                     ${getActionChosenPlayer()} revealed a Countess and won the challenge.
                     It is your turn.`});
                 break;
@@ -1008,6 +1005,12 @@ io.on("connection", (socket) => {
         console.log(`User ${socket.id} disconnected`);
         const foundUser = removeUser(socket.id);
         io.to(foundUser.password).emit("playerLeft", getUsers());
+
+        io.in(foundUser.password).emit("clientReset");
+
+        fullResetUsers();
+        fullResetDeckOfCards();
+        resetPlayersCards();
     });
 });
 

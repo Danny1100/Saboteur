@@ -1,6 +1,8 @@
 const users = [];
 const globalPassword = "svge";
-const numberOfPlayers = 5;
+var numberOfPlayers = 0;
+const maxNumberOfPlayers = 6;
+var gameStarted = false;
 var playerTurnIndex = 0;
 const eliminatedPlayers = {};
 var numberOfEliminatedPlayers = 0;
@@ -18,6 +20,9 @@ const addUser = (id, username, password) => {
     };
     if(getRoomFull()) {
         return {error: "Room Full"};
+    };
+    if(gameStarted) {
+        return {error: "Game has already started"};
     };
     let sameUsername = false;
     let samePlayer = false;
@@ -37,6 +42,8 @@ const addUser = (id, username, password) => {
     };
     const newUser = {id, username, password};
     users.push(newUser);
+    numberOfPlayers++;
+
     return { users };
 };
 
@@ -72,13 +79,20 @@ const removeUser = (id) => {
             users.splice(users.indexOf(user), 1);
         };
     });
+    numberOfPlayers = users.length;
     return foundUser;
+};
+
+//game is started functions
+const setGameStarted = (data) => {
+    gameStarted = data;
+    return gameStarted;
 };
 
 
 //room functions
 const getRoomFull = () => {
-    if(users.length < numberOfPlayers) {
+    if(users.length < maxNumberOfPlayers) {
         return false;
     }
     return true;
@@ -233,13 +247,36 @@ const resetUsersGameStates = () => {
     numberOfUsersPlayAgain = 0;
 };
 
+const fullResetUsers = () => {
+    users.splice(0, users.length);
+    numberOfPlayers = users.length;
+    gameStarted = false;
+    playerTurnIndex = 0;
+    for(let id in eliminatedPlayers) {
+        delete eliminatedPlayers[id];
+    };
+    numberOfEliminatedPlayers = 0;
+    for(let id in playersPassedChallenge) {
+        delete playersPassedChallenge[id];
+    };
+    actionChosenPlayer = "";
+    for(let id in usersPlayAgain) {
+        delete usersPlayAgain[id];
+    };
+    numberOfUsersPlayAgain = 0;
+    for(let id in numberOfWins) {
+        delete numberOfWins[id];
+    };
+};
+
 
 module.exports = { 
     addUser, findUserById, findUserByUsername, getUsers, removeUser, 
+    setGameStarted, 
     getNumberOfPlayers, 
     getPlayerTurnIndex, initialiseEliminatedPlayers, getEliminatedPlayers, nextPlayerIndex, eliminatePlayer, 
     initialisePlayersPassedChallenge, getPlayersPassedChallenge, updatePlayersPassedChallenge, calculatePlayersWaiting, resetPlayersPassedChallenge,
     getActionChosenPlayer, setActionChosenPlayer,
     initialiseUsersPlayAgain, getUsersPlayAgain, setUsersPlayAgain, getNumberOfUsersPlayAgain,
     initialiseNumberOfWins, getNumberOfWins, incrementWins, 
-    resetUsersGameStates };
+    resetUsersGameStates, fullResetUsers };
