@@ -217,22 +217,24 @@ io.on("connection", (socket) => {
 
     //listening for draw action
     socket.on("drawAction", (data) => {
-        socket.emit("drawActionChooseCardToDraw", {drawnCard: drawCard()});
+        socket.emit("drawActionNewCard", {drawnCard: drawCard()});
         io.in(data.password).emit("updateRemainingCards", getRemainingCards());
     });
 
     socket.on("confirmNewCard", (data) => {
-        if(data.chosenCard === data.activeCard) {
+        if(data.activeCard === "Saboteur") {
             discardCard(data.drawnCard);
             io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+            io.in(data.password).emit("updateHistory", `${findUserById(socket.id).username} drew a card and discarded ${data.drawnCard}`);
         } else {
             discardCard(data.activeCard);
             io.in(data.password).emit("updateDiscardPile", getDiscardPile());
             
-            updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
+            updatePlayerCard(socket.id, data.activeCard, data.drawnCard);
             io.in(data.password).emit("updatePlayerCards", getPlayerCards());
-            setPlayerActiveCard(socket.id, data.chosenCard);
-            socket.emit("updateActiveCard", data.chosenCard);
+            setPlayerActiveCard(socket.id, data.drawnCard);
+            socket.emit("updateActiveCard", data.drawnCard);
+            io.in(data.password).emit("updateHistory", `${findUserById(socket.id).username} drew a card and discarded ${data.activeCard}`);
         };
 
         if(getRemainingCards() === 0) {
@@ -401,47 +403,20 @@ io.on("connection", (socket) => {
             It is your turn.`});
     });
 
-    socket.on("archmageAction", () => {
+    socket.on("archmageChosePlayer", (data) => {
         for(let id in getEliminatedPlayers()) {
             if(!getEliminatedPlayers()[id]) {
-                io.to(id).emit("challengeAction", {player: findUserById(socket.id), characterAction: "Archmage"});
+                io.to(id).emit("challengeAction", {player: findUserById(socket.id), chosenPlayer: data.chosenPlayer, characterAction: "Archmage"});
             } else {
-                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Archmage. Waiting to see if other players will challenge.`});
+                io.to(id).emit("notPlayerTurn", {history: `${findUserById(socket.id).username} is using Archmage on ${data.chosenPlayer}. Waiting to see if other players will challenge.`});
             };
         };
 
         updatePlayersPassedChallenge(socket.id);
-        socket.emit("updateHistory", `You are using Archmage. Waiting to see if other players will challenge.`)
+        socket.emit("updateHistory", `You are using Archmage on ${data.chosenPlayer}. Waiting to see if other players will challenge.`)
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
-    });
 
-    socket.on("archmageChoseCard", (data) => {
-        io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
-        io.in(data.password).emit("clearPlayersWaiting");
-        io.in(data.password).emit("clearOpponentAction");
-
-        insertCard(data.activeCard);
-        if(data.secondCard) {
-            if(data.chosenCard === data.topCard) {
-                insertCard(data.secondCard);
-            } else {
-                insertCard(data.topCard);
-            };
-        };
-        shuffleDeck();
-
-        updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
-        io.in(data.password).emit("updatePlayerCards", getPlayerCards());
-        io.in(data.password).emit("updateRemainingCards", getRemainingCards());
-        setPlayerActiveCard(socket.id, data.chosenCard);
-        socket.emit("updateActiveCard", data.chosenCard);
-
-        nextPlayerIndex();
-        const currentPlayer = findUserById(socket.id);
-        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and drew a new active card.
-            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Archmage and drew a new active card.
-            It is your turn.`});
+        setActionChosenPlayer(data.chosenPlayer);
     });
 
     socket.on("rogueChosePlayer", (data) => {
@@ -461,17 +436,29 @@ io.on("connection", (socket) => {
     });
 
     socket.on("rogueFinishSeeingCard", (data) => {
-        io.to(getUsers()[getPlayerTurnIndex()].id).emit("clearDrawStates");
-        io.in(data.password).emit("clearPlayersWaiting");
-        io.in(data.password).emit("clearOpponentAction");
-        resetPlayersPassedChallenge();
+        updatePlayersPassedChallenge(socket.id);
+        let playersWaiting = calculatePlayersWaiting();
+        if(playersWaiting === 1) {
+            io.in(data.password).emit("clearDrawStates");
+            io.in(data.password).emit("clearPlayersWaiting");
+            io.in(data.password).emit("clearOpponentAction");
+            resetPlayersPassedChallenge();
 
-        nextPlayerIndex();
-        const currentPlayer = findUserById(socket.id);
-        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue and looked at ${data.chosenPlayer}'s active card.
-            It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
-        io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Rogue and looked at ${data.chosenPlayer}'s active card.
-            It is your turn.`});
+            nextPlayerIndex();
+            const currentPlayer = findUserById(socket.id);
+            io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${data.chosenPlayer} who revealed their active card.
+                It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+            io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Rogue on ${data.chosenPlayer} who revealed their active card.
+                It is your turn.`});
+
+        } else {
+            let playersPassedChallenge = getPlayersPassedChallenge();
+            for(let id in playersPassedChallenge) {
+                if(playersPassedChallenge[id]) {
+                    io.to(id).emit("rogueWait", {playersWaiting: playersWaiting-1});
+                }
+            };
+        };
     });
 
     //listening for challenge actions
@@ -522,29 +509,50 @@ io.on("connection", (socket) => {
                     break;
 
                 case "Archmage":
-                    if(getRemainingCards() !== 1) {
-                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and was not challenged.
-                            ${currentPlayer.username} is looking at the top two cards in the deck and choosing one of them to be their active card.
-                            The unchosen card as well as ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was not challenged.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.`});
 
-                        const topCard = drawCard();
-                        const secondCard = drawCard();
-                        io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard, secondCard: secondCard});
-                    } else {
-                        io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and was not challenged.
-                            ${currentPlayer.username} will replace their current active card with the last card in the deck.
-                            ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+                    const playerActiveCard = getPlayersActiveCards()[currentPlayer.id];
+                    const opponentActiveCard = getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id];
 
-                        const topCard = drawCard();
-                        io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard});
-                    }
+                    setPlayerActiveCard(currentPlayer.id, opponentActiveCard);
+                    setPlayerActiveCard(findUserByUsername(getActionChosenPlayer()).id, playerActiveCard);
+                    io.to(currentPlayer.id).emit("updateActiveCard", getPlayersActiveCards()[currentPlayer.id]);
+                    io.to(findUserByUsername(getActionChosenPlayer()).id).emit("updateActiveCard", getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]);
+                    
+                    updatePlayerCard(currentPlayer.id, playerActiveCard, opponentActiveCard);
+                    updatePlayerCard(findUserByUsername(getActionChosenPlayer()).id, opponentActiveCard, playerActiveCard);
+                    io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was not challenged.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was not challenged.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.
+                        It is your turn.`})
+
                     break;
 
                 case "Rogue":
-                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was not challenged.
-                        ${currentPlayer.username} is now looking at ${getActionChosenPlayer()}'s active card.`});
-                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and weren't challenged.`,
-                        topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]});
+                    for(let id in getEliminatedPlayers()) {
+                        if(!getEliminatedPlayers()[id] && findUserByUsername(getActionChosenPlayer()).id !== id && currentPlayer.id !== id) {
+                            io.to(id).emit("rogueSeeActiveCard", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and wasn't challenged.`,
+                                topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id], 
+                                chosenPlayer: getActionChosenPlayer()});
+                        } else if(findUserByUsername(getActionChosenPlayer()).id === id) {
+                            io.to(id).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on you and wasn't challenged. 
+                                The other players are looking at your active card.`});
+                        } else if(currentPlayer.id === id) {
+                            io.to(id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and weren't challenged.`,
+                                topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id], 
+                                chosenPlayer: getActionChosenPlayer()});
+                        } else {
+                            io.to(id).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and wasn't challenged. 
+                                ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}.`});
+                        };
+                    };
+                    
                     break;
 
                 default:
@@ -569,7 +577,7 @@ io.on("connection", (socket) => {
 
         const currentPlayer = getUsers()[getPlayerTurnIndex()];
         const challengePlayer = findUserById(socket.id);
-        if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
+        if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue" || data.opponentAction === "Archmage") {
             io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used ${data.opponentAction} on ${getActionChosenPlayer()} and was challenged by ${challengePlayer.username}.
                 ${currentPlayer.username} is now going to reveal a card.`})
             io.to(currentPlayer.id).emit("updateHistory", `You used ${data.opponentAction} on ${getActionChosenPlayer()} and ${challengePlayer.username} challenged you.
@@ -865,6 +873,7 @@ io.on("connection", (socket) => {
         };
         
         const currentPlayer = getUsers()[getPlayerTurnIndex()];
+        const chosenPlayer = findUserByUsername(getActionChosenPlayer());
         switch (data.opponentAction) {
             case "Assassin":
                 const chosenPlayerId = findUserByUsername(getActionChosenPlayer()).id;
@@ -924,26 +933,49 @@ io.on("connection", (socket) => {
                 break;
 
             case "Archmage":
-                if(getRemainingCards() !== 1) {
-                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and won the challenge.
-                        ${currentPlayer.username} is looking at the top two cards in the deck and choosing one of them to be their active card.
-                        The unchosen card as well as ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+                if(getEliminatedPlayers()[chosenPlayer.id]) {
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: 
+                        `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} who challenged.
+                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
+                        `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} who challenged.
+                        ${getActionChosenPlayer()} lost the challenge and has been eliminated from the game.
+                        It is your turn.`});
 
-                    const topCard = drawCard();
-                    const secondCard = drawCard();
-                    io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard, secondCard: secondCard});
+                    socket.emit("clearDrawStates");
+                    io.in(data.password).emit("clearOpponentAction");
                 } else {
-                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage and won the challenge.
-                        ${currentPlayer.username} will replace their current active card with the last card in the deck.
-                        ${currentPlayer.username}'s previous active card will be shuffled back into the deck.`});
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had an Archmage and won the challenge.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.`});
 
-                    const topCard = drawCard();
-                    io.to(currentPlayer.id).emit("archmageDrawCards", {topCard: topCard});
-                }
+                    const playerActiveCard = getPlayersActiveCards()[currentPlayer.id];
+                    const opponentActiveCard = getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id];
+
+                    setPlayerActiveCard(currentPlayer.id, opponentActiveCard);
+                    setPlayerActiveCard(findUserByUsername(getActionChosenPlayer()).id, playerActiveCard);
+                    io.to(currentPlayer.id).emit("updateActiveCard", getPlayersActiveCards()[currentPlayer.id]);
+                    io.to(findUserByUsername(getActionChosenPlayer()).id).emit("updateActiveCard", getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]);
+                    
+                    updatePlayerCard(currentPlayer.id, playerActiveCard, opponentActiveCard);
+                    updatePlayerCard(findUserByUsername(getActionChosenPlayer()).id, opponentActiveCard, playerActiveCard);
+                    io.in(data.password).emit("updatePlayerCards", getPlayerCards());
+
+                    nextPlayerIndex();
+                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had an Archmage and won the challenge.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.
+                        It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
+                    io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Archmage on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
+                        ${currentPlayer.username} had an Archmage and won the challenge.
+                        ${currentPlayer.username} and ${getActionChosenPlayer()} have swapped active cards.
+                        It is your turn.`})
+                };
                 break;
 
             case "Rogue":
-                const chosenPlayer = findUserByUsername(getActionChosenPlayer());
                 if(getEliminatedPlayers()[chosenPlayer.id]) {
                     nextPlayerIndex();
                     io.in(data.password).emit("notPlayerTurn", {history: 
@@ -958,12 +990,27 @@ io.on("connection", (socket) => {
                     socket.emit("clearDrawStates");
                     io.in(data.password).emit("clearOpponentAction");
                 } else {
-                    io.in(data.password).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and was challenged by ${data.challengePlayer}.
-                        ${currentPlayer.username} had a Rogue and won the challenge.
-                        ${currentPlayer.username} is now looking at ${getActionChosenPlayer()}'s active card.`})
-                    io.to(currentPlayer.id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} and won the challenge.`,
-                        topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]});
+                    for(let id in getEliminatedPlayers()) {
+                        if(!getEliminatedPlayers()[id] && findUserByUsername(getActionChosenPlayer()).id !== id && currentPlayer.id !== id) {
+                            io.to(id).emit("rogueSeeActiveCard", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and won the challenge against ${data.challengePlayer}.
+                                ${getActionChosenPlayer()}'s active card is:`,
+                                topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id], 
+                                chosenPlayer: getActionChosenPlayer()});
+                        } else if(findUserByUsername(getActionChosenPlayer()).id === id) {
+                            io.to(id).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on you and won the challenge against ${data.challengePlayer}. 
+                                The other players are looking at your active card.`});
+                        } else if(currentPlayer.id === id) {
+                            io.to(id).emit("rogueSeeActiveCard", {history: `You used Rogue on ${getActionChosenPlayer()} won the challenge against ${data.challengePlayer}.
+                                ${getActionChosenPlayer()}'s active card is:`,
+                                topCard: getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id], 
+                                chosenPlayer: getActionChosenPlayer()});
+                        } else {
+                            io.to(id).emit("notPlayerTurn", {history: `${currentPlayer.username} used Rogue on ${getActionChosenPlayer()} and won the challenge against ${data.challengePlayer}. 
+                                ${getActionChosenPlayer()}'s active card is ${getPlayersActiveCards()[findUserByUsername(getActionChosenPlayer()).id]}.`});
+                        };
+                    };
                 };
+
                 break;
 
             default:

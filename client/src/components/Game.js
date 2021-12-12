@@ -267,9 +267,9 @@ const Game = (props) => {
                 );
 
 
-            case "drawActionChooseCardToDraw":
+            case "drawActionNewCard":
                 return (
-                    <div id="drawActionChooseCardToDraw">
+                    <div id="drawActionNewCard">
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
@@ -277,21 +277,33 @@ const Game = (props) => {
                             playerCards={props.playerCards}
                         />
                         <div>
-                            <h2>Choose a card to be your active card:</h2>
-                            <label className="chooseCard">
-                                <input type="radio" value={props.drawnCard} name="drawActionChooseCardToDraw" onChange={props.chooseCard}></input>
-                                <span className="chooseCardSpan">
-                                    <img src={characterCardImages[props.drawnCard]} alt={props.drawnCard}/>
-                                </span>
+                            <h2>Your new active card is {props.drawnCard}</h2>
+                            <div className="seeCard">
+                                <img src={characterCardImages[props.drawnCard]} alt={props.drawnCard}/>
                                 <h2>Drawn card</h2>
-                            </label>
-                            <label className="chooseCard">
-                                <input type="radio" value={props.activeCard} name="drawActionChooseCardToDraw" onChange={props.chooseCard}></input>
-                                <span className="chooseCardSpan">
-                                    <img src={characterCardImages[props.activeCard]} alt={props.activeCard}/>
-                                    <h2>Previous card</h2>
-                                </span>
-                            </label>
+                            </div>
+                        </div>
+                        <div className="bottomBar">
+                            <button className="blueButton" onClick={props.confirmNewCard}>Confirm</button>
+                        </div>
+                    </div>
+                );
+
+            case "drawActionKeepSaboteur":
+                return (
+                    <div id="drawActionKeepSaboteur">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <div>
+                            <h2>Your active card is still Saboteur. You discarded {props.drawnCard}.</h2>
+                            <div className="seeCard">
+                                <img src={characterCardImages[props.activeCard]} alt={props.activeCard}/>
+                                <h2>Your active card</h2>
+                            </div>
                         </div>
                         <div className="bottomBar">
                             <button className="blueButton" onClick={props.confirmNewCard}>Confirm</button>
@@ -418,40 +430,34 @@ const Game = (props) => {
                     </div>
                 );
 
-            case "archmageDrawCards":
+            case "archmageChoosePlayer":
                 return (
-                    <div id="archmageDrawCards">
+                    <div id="archmageChoosePlayer">
                         <CardInfo
                             discardPile={props.discardPile}
                             remainingCards={props.remainingCards}
                             users={props.users}
                             playerCards={props.playerCards}
                         />
+                        <h2>Choose a player to use Archmage on:</h2>
                         <div>
-                            <h2>You used Archmage. Choose a card to be your active card:</h2>
-                            <label className="chooseCard">
-                                <input type="radio" value={props.topCard} name="archmageChooseCard" onChange={props.chooseCard}></input>
-                                <span className="chooseCardSpan">
-                                    <img src={characterCardImages[props.topCard]} alt={props.topCard}/>
-                                </span>
-                                <h2>Top Card</h2>
-                            </label>
-                            {
-                                props.secondCard ? (
-                                    <label className="chooseCard">
-                                        <input type="radio" value={props.secondCard} name="archmageChooseCard" onChange={props.chooseCard}></input>
-                                        <span className="chooseCardSpan">
-                                            <img src={characterCardImages[props.secondCard]} alt={props.secondCard}/>
-                                        </span>
-                                        <h2>Second Card</h2>
-                                    </label>
-                                )
-                                :
-                                ""
-                            }
+                            {props.users && props.users.map((user, index) => {
+                                if(user.id !== props.id && props.playerCards[user.id].length !== 0) {
+                                    return (
+                                        <label className="choosePlayer" key={index}>
+                                        <input type="radio" value={user.username} name="archmageChoosePlayer" onChange={props.choosePlayer}></input>
+                                            <div className="radioButton">
+                                                <h3>{user.username}</h3>
+                                            </div>
+                                        </label>
+                                    );
+                                } else {
+                                    return "";
+                                };
+                            })}
                         </div>
                         <div className="bottomBar">
-                            <button className="blueButton" onClick={props.archmageChoseCard}>Confirm</button>
+                            <button className="blueButton" onClick={props.archmageConfirm}>Confirm</button>
                         </div>
                     </div>
                 );
@@ -460,32 +466,32 @@ const Game = (props) => {
                 return (
                     <div id="rogueChoosePlayer">
                         <CardInfo
-                        discardPile={props.discardPile}
-                        remainingCards={props.remainingCards}
-                        users={props.users}
-                        playerCards={props.playerCards}
-                    />
-                    <h2>Choose a player to use Rogue on:</h2>
-                    <div>
-                        {props.users && props.users.map((user, index) => {
-                            if(user.id !== props.id && props.playerCards[user.id].length !== 0) {
-                                return (
-                                    <label className="choosePlayer" key={index}>
-                                    <input type="radio" value={user.username} name="rogueChoosePlayer" onChange={props.choosePlayer}></input>
-                                        <div className="radioButton">
-                                            <h3>{user.username}</h3>
-                                        </div>
-                                    </label>
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <h2>Choose a player to use Rogue on:</h2>
+                        <div>
+                            {props.users && props.users.map((user, index) => {
+                                if(user.id !== props.id && props.playerCards[user.id].length !== 0) {
+                                    return (
+                                        <label className="choosePlayer" key={index}>
+                                        <input type="radio" value={user.username} name="rogueChoosePlayer" onChange={props.choosePlayer}></input>
+                                            <div className="radioButton">
+                                                <h3>{user.username}</h3>
+                                            </div>
+                                        </label>
 
-                                );
-                            } else {
-                                return "";
-                            };
-                        })}
-                    </div>
-                    <div className="bottomBar">
-                        <button className="blueButton" onClick={props.rogueConfirm}>Confirm</button>
-                    </div>
+                                    );
+                                } else {
+                                    return "";
+                                };
+                            })}
+                        </div>
+                        <div className="bottomBar">
+                            <button className="blueButton" onClick={props.rogueConfirm}>Confirm</button>
+                        </div>
                     </div>
                 );
 
@@ -507,6 +513,28 @@ const Game = (props) => {
                         </div>
                         <div className="bottomBar">
                             <button className="blueButton" onClick={props.rogueFinishSeeingCard}>Confirm</button>
+                        </div>
+                    </div>
+                );
+
+            case "rogueWait":
+                return (
+                    <div id="rogueWait">
+                        <CardInfo
+                            discardPile={props.discardPile}
+                            remainingCards={props.remainingCards}
+                            users={props.users}
+                            playerCards={props.playerCards}
+                        />
+                        <h2>{props.history}</h2>
+                        <div>
+                            <span className="rogueCard">
+                                <img src={characterCardImages[props.topCard]} alt={props.topCard}/>
+                                <h2>{`${props.chosenPlayer}'s Active Card`}</h2>
+                            </span>
+                        </div>
+                        <div className="bottomBar">
+                            <h2 className="rogueWait">{props.playersWaiting === 1 ? "Waiting on 1 player" : `Waiting on ${props.playersWaiting} players`}</h2>
                         </div>
                     </div>
                 );
@@ -713,7 +741,7 @@ const Game = (props) => {
                             playerCards={props.playerCards}
                         />
                         <div>
-                            <h2>You won the challenge. Choose a card to be your active card:</h2>
+                            <h2>You won the challenge. You have the choice to replace the card you revealed:</h2>
                             <label className="chooseCard">
                                 <input type="radio" value={props.drawnCard} name="challengeWonDrawCard" onChange={props.chooseCard}></input>
                                 <span className="chooseCardSpan">
@@ -745,7 +773,7 @@ const Game = (props) => {
                             playerCards={props.playerCards}
                         />
                         <div>
-                            <h2>You won the challenge. Choose a card to be your active card:</h2>
+                            <h2>You won the challenge. You have the choice to replace the card you revealed:</h2>
                             <label className="chooseCard">
                                 <input type="radio" value={props.drawnCard} name="challengeWonDrawCard" onChange={props.chooseCard}></input>
                                 <span className="chooseCardSpan">

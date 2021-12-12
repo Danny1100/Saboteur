@@ -167,6 +167,7 @@ function App() {
     socket.on("updatePlayersWaiting", (data) => {
       setPlayersWaiting(data);
     });
+
     socket.on("updateNumberOfWins", (data) => {
       setNumberOfWins(data);
     })
@@ -214,8 +215,13 @@ function App() {
     });
 
     //draw functions
-    socket.on("drawActionChooseCardToDraw", (data) => {
-      setDisplayGameState("drawActionChooseCardToDraw");
+    socket.on("drawActionNewCard", (data) => {
+      if(activeCard === "Saboteur") {
+        setDisplayGameState("drawActionKeepSaboteur");
+      } else {
+        setDisplayGameState("drawActionNewCard");
+      };
+      
       setDrawnCard(data.drawnCard);
     });
 
@@ -248,26 +254,22 @@ function App() {
       setDisplayGameState("prophetSeeCards");
     });
 
-    socket.on("archmageDrawCards", (data) => {
-      if(data.secondCard) {
-        setTopCard(data.topCard);
-        setSecondCard(data.secondCard);
-      } else {
-        setTopCard(data.topCard);
-      };
-      setDisplayGameState("archmageDrawCards");
-    });
-
     socket.on("rogueSeeActiveCard", (data) => {
       setHistory(data.history);
       setTopCard(data.topCard);
+      setChosenPlayer(data.chosenPlayer);
       setDisplayGameState("rogueSeeActiveCard");
+    });
+
+    socket.on("rogueWait", (data) => {
+      setPlayersWaiting(data.playersWaiting);
+      setDisplayGameState("rogueWait");
     });
 
     //challenge actions
     socket.on("challengeAction", (data) => {
       setDisplayGameState("challengeAction");
-      if(data.characterAction === "Assassin" || data.characterAction === "Rogue") {
+      if(data.characterAction === "Assassin" || data.characterAction === "Rogue" || data.characterAction === "Archmage") {
         setHistory(`${data.player.username} is using ${data.characterAction} on ${data.chosenPlayer}. Would you like to challenge this action?`);
       } else if(data.characterAction === "Countess") {
         setHistory(`${data.currentPlayer.username} used Assassin on ${data.player.username}.
@@ -286,8 +288,8 @@ function App() {
     });
 
     socket.on("challengeWait", (data) => {
-      setDisplayGameState("challengeWait");
       setPlayersWaiting(data.playersWaiting);
+      setDisplayGameState("challengeWait");
     });
 
     socket.on("challengeReveal", (data) => {
@@ -364,7 +366,7 @@ function App() {
       setPlayersWaiting(0);
       setPlayAgainButton("Play Again")
     });
-  }, []);
+  }, [activeCard]);
 
 
   //selecting and submitting permanent card function at beginning of game
@@ -466,15 +468,7 @@ function App() {
   };
 
   const confirmNewCard = () => {
-    if(chosenCard === "") {
-      alert("Please choose a card to be your active card.");
-    } else if((drawnCard === "Saboteur"  || activeCard === "Saboteur") && chosenCard !== "Saboteur") {
-      alert("You cannot discard the Saboteur off of a draw action.");
-    } else {
-      socket.emit("confirmNewCard", {password: password, chosenCard: chosenCard, drawnCard: drawnCard, activeCard: activeCard});
-      setDrawnCard("");
-      setChosenCard("");
-    }
+    socket.emit("confirmNewCard", {password: password, drawnCard: drawnCard, activeCard: activeCard});
   };
 
   //character action functions
@@ -530,15 +524,15 @@ function App() {
     if( (permanentCard === "Saboteur" && activeCard === "Archmage") || (activeCard === "Saboteur" && permanentCard === "Archmage") ) {
       alert("You cannot use Archmage since you hold a Saboteur");
     } else {
-      socket.emit("archmageAction");
+      setDisplayGameState("archmageChoosePlayer");
     };
   };
 
-  const archmageChoseCard = () => {
-    if(chosenCard === "") {
-      alert("Please choose a card to be your new active card");
+  const archmageConfirm = () => {
+    if(chosenPlayer === "") {
+      alert("Please choose a player to use Archmage on.");
     } else {
-      socket.emit("archmageChoseCard", {password: password, chosenCard: chosenCard, activeCard: activeCard, topCard: topCard, secondCard: secondCard});
+      socket.emit("archmageChosePlayer", {password: password, chosenPlayer: chosenPlayer});
     }
   };
 
@@ -690,7 +684,7 @@ function App() {
         prophetAction={prophetAction}
         prophetFinishSeeingCards={prophetFinishSeeingCards}
         archmageAction={archmageAction}
-        archmageChoseCard={archmageChoseCard}
+        archmageConfirm={archmageConfirm}
         rogueAction={rogueAction}
         rogueConfirm={rogueConfirm}
         rogueFinishSeeingCard={rogueFinishSeeingCard}
