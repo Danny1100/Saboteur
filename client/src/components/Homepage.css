@@ -16,7 +16,6 @@
 
 #homepage a {
     color: rgb(57, 135, 207);
-    position: fixed;
     left: 50%;
     transform: translateX(-50%);
     bottom: 13%;

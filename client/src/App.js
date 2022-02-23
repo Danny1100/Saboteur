@@ -44,8 +44,6 @@ function App() {
     });
 
     socket.on("clientReset", () => {
-      setUsername('');
-      setPassword('');
       setUsers([]);
       setNumberOfPlayers(0);
 
@@ -73,15 +71,18 @@ function App() {
       setPlayersWaiting(0);
       setPlayAgainButton("Play again");
       
-      alert("Another player has disconnected");
+      alert("A player has disconnected");
     });
   }, []);
 
   //Function to join a room
   const joinRoom = () => {
-    if(username !== "" && password !== "") {
+    if(username !== "" && password !== "" && username.length <= 30) {
       socket.emit("joinRoom", {username: username, password: password});
-    } else {
+    } else if (username.length > 30) {
+      alert("Username cannot be longer than 30 characters");
+    }
+    else {
       alert("Enter a valid Username and Password");
     };
   };

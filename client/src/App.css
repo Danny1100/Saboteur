@@ -4,6 +4,8 @@ html {
   text-align: center;
   color: white;
   font-size: 120%;
+  font-size: 1vw;
+  margin-bottom: 5%;
 }
 
 button {
@@ -37,7 +39,7 @@ button:disabled {
 
 .bottomBar {
   position: fixed;
-  height: 10%;
+  height: 11vh;
   width: 100%;
   right: 0;
   bottom: 0;

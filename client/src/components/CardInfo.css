@@ -1,5 +1,6 @@
 #cardInfo {
-    margin: 1%;
+    margin: 0.5%;
+    padding-top: 0vh;
     padding-left: 1%;
     padding-right: 1%;
     padding-bottom: 0.5%;
@@ -19,8 +20,9 @@
 }
 
 .remainingCardSlots p {
-    margin: 1.5%;
+    margin: 0.8%;
     text-align: center;
+    width: 25vw;
 }
 
 .remainingCardSlots {

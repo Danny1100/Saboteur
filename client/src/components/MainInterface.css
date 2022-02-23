@@ -10,18 +10,18 @@
 
 .activeCard {
     display: inline-block;
-    margin-right: 3%;
+    margin-right: 6vw;
 }
 
 .activeCard img {
-    width: 70%;
+    width: 15.5vw;
 }
 
 .permanentCard {
     display: inline-block;
-    margin-left: 3%;
+    margin-left: 6vw;
 }
 
 .permanentCard img {
-    width: 70%;
+    width: 15.5vw;
 }

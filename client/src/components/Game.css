@@ -115,7 +115,9 @@
     display: inline-block;
 }
 .prophetCards img {
-    width: 75%;
+    width: 16.5vw;
+    margin-left: 3vw;
+    margin-right: 3vw;
 }
 .newCard img {
     width: 16%;
@@ -164,12 +166,12 @@
     display: none;
 }
 .chooseCard img {
-    width: 65%;
-    margin-left: 5%;
-    margin-right: 5%;
+    width: 15vw;
+    margin-left: 4vw;
+    margin-right: 4vw;
 }
 .chooseCard input:checked + .chooseCardSpan img {
-    width: 75%;
+    width: 16.5vw;
 }
 .choosePlayer h3 {
     border-style: solid;
@@ -177,7 +179,7 @@
     background-color: rgb(99, 99, 99);
     border-radius: 10px;
     padding: 1%;
-    width: 20%;
+    width: 21%;
     margin: auto;
     margin-bottom: 1%;
 }

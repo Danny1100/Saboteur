@@ -36,6 +36,8 @@ io.on("connection", (socket) => {
             socket.join(data.password);
             console.log(`User ${socket.id} with username ${data.username} has joined the lobby.`);
             io.in(data.password).emit("playerJoined", {users: users, numberOfPlayers: getNumberOfPlayers()});
+
+            console.log(getUsers());
         };
     });
 
@@ -50,6 +52,9 @@ io.on("connection", (socket) => {
         initialiseUsersPlayAgain();
         initialiseNumberOfWins();
         io.in(password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile(), numberOfWins: getNumberOfWins()});
+
+        console.log("The game has started.");
+        console.log(getDeck());
     });
 
     socket.on("submitPermanentCard", (data) => {
@@ -59,9 +64,14 @@ io.on("connection", (socket) => {
         if(Object.keys(getPlayersPermanentCards()).length === getNumberOfPlayers()) {
             io.in(data.password).emit("notPlayerTurn", {history: `It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
             io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: "It is your turn"});
+
+            console.log(`${findUserById(socket.id).username} has selected ${data.permanentCard} as their permanent card. ${data.activeCard} is their active card.`);
+            console.log("All players have submitted their permanent card.");
         } else {
             for(const id in getPlayersPermanentCards()) {
                 io.to(id).emit("waitingOnPlayerSubmitPermanentCard", getNumberOfPlayers()-Object.keys(getPlayersPermanentCards()).length);
+
+                console.log(`${findUserById(socket.id).username} has selected ${data.permanentCard} as their permanent card. ${data.activeCard} is their active card.`);
             }
         };
     });
@@ -83,12 +93,20 @@ io.on("connection", (socket) => {
             socket.emit("notPlayerTurn", {history: `You successfully executed ${data.chosenPlayer}`});
 
             io.to(userId).emit("executeSuccess");
+
+            console.log(`${playerName} tried to execute ${data.chosenPlayer} and succeeded. They guessed:
+            Permanent Card: ${data.chosenPermanentCard}
+            Active Card: ${data.chosenActiveCard}`);
         } else {
             socket.to(data.password).emit("updateHistory", 
                 `${playerName} tried to execute ${data.chosenPlayer} and failed. They guessed:
                 Permanent Card: ${data.chosenPermanentCard}
                 Active Card: ${data.chosenActiveCard}`)
             socket.emit("executeFailed");
+
+            console.log(`${playerName} tried to execute ${data.chosenPlayer} and failed. They guessed:
+            Permanent Card: ${data.chosenPermanentCard}
+            Active Card: ${data.chosenActiveCard}`);
         };
     });
 
@@ -118,6 +136,8 @@ io.on("connection", (socket) => {
                 io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                 io.in(data.password).emit("loseScreen", {winner: winner});
                 io.to(winner.id).emit("winScreen");
+
+                console.log(`${winner.username} won the game.`);
             } else {
                 nextPlayerIndex();
 
@@ -128,12 +148,18 @@ io.on("connection", (socket) => {
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} failed to execute and has been eliminated from the game. 
                         They shuffled ${data.chosenCard} back into the deck.
                         It is your turn.`});
+
+                    console.log(`${playerName} failed to execute and has been eliminated from the game. 
+                    They shuffled ${data.chosenCard} back into the deck.`);
+                    console.log(getDeck());
                 } else {
                     io.in(data.password).emit("notPlayerTurn", {history: 
                         `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
                         It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.
                         It is your turn.`});
+
+                    console.log(`${playerName} failed to execute and has been eliminated from the game. They discarded ${data.chosenCard}.`);
                 };
                                  
             };
@@ -152,12 +178,19 @@ io.on("connection", (socket) => {
                 io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. 
                     They shuffled ${data.chosenCard} back into the deck.
                     It is your turn.`});  
+
+                console.log(`${playerName} failed to execute and lost a card slot. 
+                They shuffled ${data.chosenCard} back into the deck.`);
+                console.log(getDeck());
             } else {
                 io.in(data.password).emit("notPlayerTurn", {history: 
                     `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
                     It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
                 io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${playerName} has lost a card slot due to failed execute. They discarded ${data.chosenCard}.
                     It is your turn.`});  
+
+                console.log(`${playerName} failed to execute and lost a card slot. 
+                They discarded ${data.chosenCard}.`);
             };
             
         };      
@@ -186,8 +219,13 @@ io.on("connection", (socket) => {
             io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. 
                 They shuffled ${data.chosenCard} back into the deck. 
                 They now have the choice to draw a new card.`);
+
+                console.log(`${playerName} was successfully executed and lost a card slot. 
+                They shuffled ${data.chosenCard} back into the deck.`);
         } else {
             io.in(data.password).emit("updateHistory", `${playerName} was successfully executed and lost a card slot. They discarded ${data.chosenCard}. They now have the choice to draw a new card.`);
+
+            console.log(`${playerName} was successfully executed and lost a card slot. They discarded ${data.chosenCard}.`);
         };
         
         socket.emit("executeSuccessChooseCardToDraw", {drawnCard: drawCard()});
@@ -197,6 +235,8 @@ io.on("connection", (socket) => {
         if(data.chosenCard === data.activeCard) {
             insertCard(data.drawnCard);
             shuffleDeck();
+
+            console.log(`They kept ${data.activeCard} as their active card.`);
         } else {
             updatePlayerCard(socket.id, data.activeCard, data.chosenCard);
             socket.emit("updatePlayerCards", getPlayerCards());
@@ -206,6 +246,8 @@ io.on("connection", (socket) => {
 
             insertCard(data.activeCard);
             shuffleDeck();
+
+            console.log(`Their new active card is ${data.drawnCard}.`);
         }
 
         socket.emit("clearExecuteStates");
@@ -226,6 +268,8 @@ io.on("connection", (socket) => {
             discardCard(data.drawnCard);
             io.in(data.password).emit("updateDiscardPile", getDiscardPile());
             io.in(data.password).emit("updateHistory", `${findUserById(socket.id).username} drew a card and discarded ${data.drawnCard}`);
+
+            console.log(`${findUserById(socket.id).username} drew a ${data.drawnCard} and discarded it because they hold Saboteur`);
         } else {
             discardCard(data.activeCard);
             io.in(data.password).emit("updateDiscardPile", getDiscardPile());
@@ -235,6 +279,8 @@ io.on("connection", (socket) => {
             setPlayerActiveCard(socket.id, data.drawnCard);
             socket.emit("updateActiveCard", data.drawnCard);
             io.in(data.password).emit("updateHistory", `${findUserById(socket.id).username} drew a card and discarded ${data.activeCard}`);
+
+            console.log(`${findUserById(socket.id).username} drew ${data.drawnCard} and discarded ${data.activeCard}`);
         };
 
         if(getRemainingCards() === 0) {
@@ -243,6 +289,8 @@ io.on("connection", (socket) => {
             io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
             io.in(data.password).emit("loseScreen", {winner: winner});
             io.to(winner.id).emit("winScreen");
+
+            console.log(`No cards left. ${winner.username} won.`);
         } else {
             socket.emit("chooseCharacterAction");
         }
@@ -265,6 +313,8 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
 
         setActionChosenPlayer(data.chosenPlayer);
+
+        console.log(`${findUserById(socket.id).username} is using Assassin on ${data.chosenPlayer}.`);
     });
 
     socket.on("assassinGuessActiveCard", (data) => {
@@ -298,6 +348,9 @@ io.on("connection", (socket) => {
                     io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
+
+                    console.log(`${currentPlayer.username} successfully assassinated ${chosenPlayer.username} guessing ${data.chosenCard}.
+                                ${winner.username} has won the game.`);
                 } else {
                     nextPlayerIndex();
 
@@ -316,6 +369,9 @@ io.on("connection", (socket) => {
                         io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username} who has been eliminated from the game. They discarded ${data.chosenCard}.
                             It is your turn.`}); 
                     };
+
+                    console.log(`${currentPlayer.username} successfully assassinated ${chosenPlayer.username} guessing ${data.chosenCard}.
+                                ${chosenPlayer.username} has been eliminated.`);
                 };
             } else {
                 setPlayerPermanentCard(chosenPlayer.id, "");
@@ -340,6 +396,8 @@ io.on("connection", (socket) => {
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} successfully assassinated ${chosenPlayer.username}. They discarded ${data.chosenCard}.
                         It is your turn.`});
                 };
+
+                console.log(`${currentPlayer.username} successfully assassinated ${chosenPlayer.username} guessing ${data.chosenCard}.`);
             };
         } else {
             nextPlayerIndex();
@@ -350,6 +408,8 @@ io.on("connection", (socket) => {
             io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} failed to assassinate ${data.chosenPlayer}.
                 ${currentPlayer.username} guessed that ${data.chosenPlayer}'s active card was ${data.chosenCard} and was incorrect.
                 It is your turn.`});
+
+            console.log(`${currentPlayer.username} failed to assassinate ${data.chosenPlayer}. Their guess was ${data.chosenCard}.`);
         };
     });
 
@@ -373,6 +433,8 @@ io.on("connection", (socket) => {
             You called Countess to block.
             Waiting to see if other players will challenge.`)
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+
+        console.log(`${findUserById(socket.id).username} is using Countess to block assassination.`);
     });
 
     socket.on("prophetAction", () => {
@@ -387,6 +449,8 @@ io.on("connection", (socket) => {
         updatePlayersPassedChallenge(socket.id);
         socket.emit("updateHistory", `You are using Prophet. Waiting to see if other players will challenge.`)
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
+
+        console.log(`${findUserById(socket.id).username} is using Prophet.`);
     });
 
     socket.on("prophetFinishSeeingCards", (data) => {
@@ -417,6 +481,8 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
 
         setActionChosenPlayer(data.chosenPlayer);
+
+        console.log(`${findUserById(socket.id).username} is using Archmage on ${data.chosenPlayer}.`);
     });
 
     socket.on("rogueChosePlayer", (data) => {
@@ -433,6 +499,8 @@ io.on("connection", (socket) => {
         socket.emit("challengeWait", {playersWaiting: calculatePlayersWaiting()});
 
         setActionChosenPlayer(data.chosenPlayer);
+
+        console.log(`${findUserById(socket.id).username} is using Rogue on ${data.chosenPlayer}.`);
     });
 
     socket.on("rogueFinishSeeingCard", (data) => {
@@ -450,7 +518,8 @@ io.on("connection", (socket) => {
                 It is ${getUsers()[getPlayerTurnIndex()].username}'s turn.`});
             io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: `${currentPlayer.username} used Rogue on ${data.chosenPlayer} who revealed their active card.
                 It is your turn.`});
-
+                
+            console.log(`${findUserById(socket.id).username} has finished looking. All players done, next player turn.`);
         } else {
             let playersPassedChallenge = getPlayersPassedChallenge();
             for(let id in playersPassedChallenge) {
@@ -458,6 +527,8 @@ io.on("connection", (socket) => {
                     io.to(id).emit("rogueWait", {playersWaiting: playersWaiting-1});
                 }
             };
+
+            console.log(`${findUserById(socket.id).username} has finished looking. Waiting on ${playersWaiting-1} players.`);
         };
     });
 
@@ -561,6 +632,7 @@ io.on("connection", (socket) => {
 
             setActionChosenPlayer("");
 
+            console.log(`${findUserById(socket.id).username} has passed. All players have passed.`);
         } else {
             let playersPassedChallenge = getPlayersPassedChallenge();
             for(let id in playersPassedChallenge) {
@@ -568,6 +640,8 @@ io.on("connection", (socket) => {
                     io.to(id).emit("challengeWait", {playersWaiting: playersWaiting});
                 }
             };
+
+            console.log(`${findUserById(socket.id).username} has passed. Waiting on ${playersWaiting} players.`);
         };
     });
 
@@ -598,6 +672,8 @@ io.on("connection", (socket) => {
                 Choose a card to reveal.`);
             io.to(currentPlayer.id).emit("challengeReveal", {challengePlayer: challengePlayer, action: data.opponentAction});
         };
+
+        console.log(`${challengePlayer.username} challenged.`);
     });
 
     socket.on("challengeReveal", (data) => {
@@ -620,6 +696,8 @@ io.on("connection", (socket) => {
             };
             
             io.to(findUserByUsername(data.challengePlayer).id).emit("loseChallenge");
+
+            console.log(`${currentPlayer.username} revealed ${data.opponentAction} and won the challenge.`);
         } else {
             socket.emit("clearDrawStates");
             io.in(data.password).emit("clearOpponentAction");
@@ -632,9 +710,14 @@ io.on("connection", (socket) => {
                 io.in(data.password).emit("updateRemainingCards", getRemainingCards());
 
                 discardedMessage = `${playerName} shuffled ${data.chosenCard} back into the deck.`
+
+                console.log(`${playerName} revealed ${data.chosenCard} and lost the challenge.`);
+                console.log(getDeck());
             } else {
                 discardCard(data.chosenCard);
                 io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+                console.log(`${playerName} revealed ${data.chosenCard} and lost the challenge.`);
             };
 
             removePlayerCard(socket.id, data.chosenCard);
@@ -650,6 +733,8 @@ io.on("connection", (socket) => {
                     io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
+
+                    console.log(`${winner.username} has won.`);
                 } else {
                     nextPlayerIndex();
                     if(data.opponentAction === "Assassin" || data.opponentAction === "Rogue") {
@@ -672,7 +757,9 @@ io.on("connection", (socket) => {
                             `${playerName} used ${data.opponentAction} but was challenged by ${data.challengePlayer} and lost. ${playerName} has been eliminated from the game.
                             ${discardedMessage}
                             It is your turn.`});
-                    };                 
+                    };  
+                    
+                    console.log(`${playerName} has been eliminated.`);
                 };
             } else {
                 setPlayerPermanentCard(socket.id, "");
@@ -716,6 +803,8 @@ io.on("connection", (socket) => {
                 ${challengePlayer} is now choosing a card to discard.`});
 
             io.to(findUserByUsername(challengePlayer).id).emit("loseCountessChallenge");
+
+            console.log(`${challengePlayer} challenged ${countessPlayer}'s Countess and lost.`);
         } else {
             let discardedMessage = `${countessPlayer} discarded ${data.chosenCard}.`
             if(data.chosenCard === "Saboteur") {
@@ -724,9 +813,14 @@ io.on("connection", (socket) => {
                 io.in(data.password).emit("updateRemainingCards", getRemainingCards());
 
                 discardedMessage = `${countessPlayer} shuffled ${data.chosenCard} back into the deck.`
+
+                console.log(`${countessPlayer}'s countess was challenged and they lost. They shuffled ${data.chosenCard} back into the deck.`);
+                console.log(getDeck());
             } else {
                 discardCard(data.chosenCard);
                 io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+                console.log(`${countessPlayer}'s countess was challenged and they lost. They discarded ${data.chosenCard}.`);
             };
 
             removePlayerCard(socket.id, data.chosenCard);
@@ -742,6 +836,8 @@ io.on("connection", (socket) => {
                     io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                     io.in(data.password).emit("loseScreen", {winner: winner});
                     io.to(winner.id).emit("winScreen");
+
+                    console.log(`${winner.username} has won.`)
                 } else {
                     nextPlayerIndex();
                     io.in(data.password).emit("notPlayerTurn", {history: 
@@ -753,7 +849,9 @@ io.on("connection", (socket) => {
                     io.to(getUsers()[getPlayerTurnIndex()].id).emit("playerTurn", {history: 
                         `${currentPlayer.username} used Assassin on ${countessPlayer} who called Countess. ${challengePlayer} challenged ${countessPlayer}'s Countess and won the challenge.
                         ${countessPlayer} has been eliminated from the game. ${discardedMessage}
-                        It is your turn.`});                 
+                        It is your turn.`});  
+                        
+                    console.log(`${countessPlayer} has been eliminated from the game.`);
                 };
                 socket.emit("clearDrawStates");
                 io.to(currentPlayer.id).emit("clearDrawStates");
@@ -790,9 +888,13 @@ io.on("connection", (socket) => {
 
             discardedMessage = `${challengePlayer.username} shuffled ${data.chosenCard} back into the deck.`
             playerDiscardMessage = `You shuffled ${data.chosenCard} back into the deck.`
+
+            console.log(`${challengePlayer.username} lost the challenge and shuffled ${data.chosenCard} back into the deck.`);
         } else {
             discardCard(data.chosenCard);
             io.in(data.password).emit("updateDiscardPile", getDiscardPile());
+
+            console.log(`${challengePlayer.username} lost the challenge and discarded ${data.chosenCard}.`);
         };
 
         removePlayerCard(socket.id, data.chosenCard);
@@ -813,6 +915,8 @@ io.on("connection", (socket) => {
                 io.in(data.password).emit("updateNumberOfWins", getNumberOfWins());
                 io.in(data.password).emit("loseScreen", {winner: winner});
                 io.to(winner.id).emit("winScreen");
+
+                console.log(`${winner.username} has won.`);
             } else {
                 io.in(data.password).emit("updateHistory", `${challengePlayer.username} challenged ${currentPlayer.username}'s ${data.opponentAction} and lost. 
                     ${discardedMessage}
@@ -828,6 +932,8 @@ io.on("connection", (socket) => {
                 } else {
                     io.to(currentPlayer.id).emit("challengeCountessWonDrawCard", {drawnCard: drawCard()});
                 };
+
+                console.log(`${challengePlayer.username} was eliminated from the game.`);
             };
         } else {
             setPlayerPermanentCard(socket.id, "");
@@ -858,9 +964,13 @@ io.on("connection", (socket) => {
             if(getPlayersActiveCards()[socket.id] === data.opponentAction) {
                 setPlayerActiveCard(socket.id, data.chosenCard);
                 socket.emit("updateActiveCard", data.chosenCard);
+
+                console.log(`${findUserById(socket.id).username} won the challenge and replaced their active card with ${data.chosenCard}.`);
             } else {
                 setPlayerPermanentCard(socket.id, data.chosenCard);
                 socket.emit("updatePermanentCard", data.chosenCard);
+
+                console.log(`${findUserById(socket.id).username} won the challenge and replaced their permanent card with ${data.chosenCard}.`);
             };
 
             insertCard(data.opponentAction);
@@ -870,6 +980,8 @@ io.on("connection", (socket) => {
             insertCard(data.drawnCard);
             shuffleDeck();
             io.in(data.password).emit("updateRemainingCards", getRemainingCards());
+
+            console.log(`${findUserById(socket.id).username} won the challenge and did not replace their cards.`);
         };
         
         const currentPlayer = getUsers()[getPlayerTurnIndex()];
@@ -1038,12 +1150,43 @@ io.on("connection", (socket) => {
             initialiseUsersPlayAgain();
 
             io.in(data.password).emit("initialiseGame", {playerCards: getPlayerCards(), remainingCards: getRemainingCards(), discardPile: getDiscardPile()});
+
+            console.log(`${findUserById(socket.id).username} wants to play again. All players haved pressed play again.`);
+            console.log("Users:");
+            console.log(getUsers());
+            console.log(`Number of players: ${getNumberOfPlayers()}
+            Player turn: ${getPlayerTurnIndex()}`);
+            console.log("Eliminated Players:");
+            console.log(getEliminatedPlayers());
+            console.log("Players pass challenge:");
+            console.log(getPlayersPassedChallenge());
+            console.log(`ActionChosenPlayer: ${getActionChosenPlayer()}`);
+            console.log("Users play again:");
+            console.log(getUsersPlayAgain());
+            console.log(`Number of users play again: ${getNumberOfUsersPlayAgain()}`);
+            console.log("Number of Wins:");
+            console.log(getNumberOfWins());
+            
+            console.log("Player Permanent Cards:");
+            console.log(getPlayersPermanentCards());
+            console.log("Player Active Cards:");
+            console.log(getPlayersActiveCards());
+
+            console.log("Deck:");
+            console.log(getDeck());
+            console.log(`Remaining cards: ${getRemainingCards()}`);
+            console.log("Player Cards:");
+            console.log(getPlayerCards());
+            console.log("Discard Pile:");
+            console.log(getDiscardPile());           
         } else {
             for(let id in getUsersPlayAgain()) {
                 if(getUsersPlayAgain()[id]) {
                     io.to(id).emit("updatePlayAgainButton", {message: `Waiting on ${getNumberOfPlayers()-getNumberOfUsersPlayAgain()} players`})
                 }
             }
+
+            console.log(`${findUserById(socket.id).username} wants to play again. Waiting on ${getNumberOfPlayers()-getNumberOfUsersPlayAgain()} players.`);
         };
     });
 
@@ -1051,13 +1194,14 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
         const foundUser = removeUser(socket.id);
-        io.to(foundUser.password).emit("playerLeft", getUsers());
+        if(Object.keys(foundUser).length !== 0) {
+            io.in(foundUser.password).emit("playerLeft", getUsers());
+            io.in(foundUser.password).emit("clientReset");
 
-        io.in(foundUser.password).emit("clientReset");
-
-        fullResetUsers();
-        fullResetDeckOfCards();
-        resetPlayersCards();
+            fullResetUsers();
+            fullResetDeckOfCards();
+            resetPlayersCards();
+        }
     });
 });
 

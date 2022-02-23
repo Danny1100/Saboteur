@@ -7,6 +7,7 @@ const Homepage = (props) => {
         <div id="homepage">
             <h1>Saboteur</h1>
             <input className="joinInput"
+                id= "usernameInput"
                 type="text" 
                 placeholder="Username" 
                 onChange={(event) => {
@@ -14,6 +15,7 @@ const Homepage = (props) => {
             }}/>
             <br></br>
             <input className = "joinInput"
+                id= "passwordInput"
                 type="text" 
                 placeholder="Password" 
                 onChange={(event) => {
